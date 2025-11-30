@@ -1,34 +1,12 @@
-/********************************** (C) COPYRIGHT *******************************
- * File Name          : main.c
- * Author             : WCH
- * Version            : V1.0.0
- * Date               : 2023/12/25
- * Description        : Main program body.
- *********************************************************************************
- * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * Attention: This software (modified or not) and binary are used for
- * microcontroller manufactured by Nanjing Qinheng Microelectronics.
- *******************************************************************************/
+#include <debug.h>
 
-/*
- *@Note
- *Low power, standby mode routine:
- *AWU automatically wakes up
- *This example demonstrates that WFI enters standby mode and wakes up automatically.
- *Note: In order to reduce power consumption as much as possible, it is recommended
- *to set the unused GPIO to pull-down mode.
- *
- */
-
-#include "debug.h"
+#include "buzzer_tunes.h"
 
 #include "uButton.h"
 
 uButton b;
 
-extern uint32_t millisec;
-
-void gotoDeepSleep (void);
+extern "C" void tone1(uint16_t frequency, uint16_t duration_ms);
 
 /* Global define */
 // §µ§Õ§à§Ò§ß§í§Ö §Þ§Ñ§Ü§â§à§ã§í (§Þ§à§Ø§ß§à §á§à§Ý§à§Ø§Ú§ä§î §Ó §à§ä§Õ§Ö§Ý§î§ß§í§Û .h)
@@ -39,49 +17,37 @@ void gotoDeepSleep (void);
 #define BOLD "\033[1m"
 #define UNDERLINE "\033[4m"
 
-
-#define LED_ON GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_SET)
-#define LED_OFF GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_RESET)
-
-#define BUZZER_ON GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_SET)
-#define BUZZER_OFF GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_RESET)
-
-#define KEY GPIO_ReadInputDataBit (GPIOC, GPIO_Pin_4)
-
 void EXTI_INT_INIT (void) {
 
-    //EXTI_InitTypeDef EXTI_InitStructure = {0};
-    // RCC_APB2PeriphClockCmd (RCC_APB2Periph_AFIO, ENABLE);
-    // EXTI_InitStructure.EXTI_Line = EXTI_Line9;
-    // EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;
-    // EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    // EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    // EXTI_Init (&EXTI_InitStructure);
+    // EXTI_InitTypeDef EXTI_InitStructure = {0};
+    //  RCC_APB2PeriphClockCmd (RCC_APB2Periph_AFIO, ENABLE);
+    //  EXTI_InitStructure.EXTI_Line = EXTI_Line9;
+    //  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;
+    //  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    //  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    //  EXTI_Init (&EXTI_InitStructure);
 
 
     EXTI_InitTypeDef EXTI_InitStructure = {0};
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
-    
+    // GPIO_InitTypeDef GPIO_InitStructure = {0};
+
     // §£§Ü§Ý§ð§é§Ú§ä§î AFIO §Õ§Ý§ñ §ß§Ñ§ã§ä§â§à§Û§Ü§Ú EXTI
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOC, ENABLE);
-    
+    RCC_APB2PeriphClockCmd (RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOC, ENABLE);
+
     // §¯§Ñ§ã§ä§â§à§Ú§ä§î PC4 §Ü§Ñ§Ü §Ó§ç§à§Õ §ã §á§à§Õ§ä§ñ§Ø§Ü§à§Û §Ó§Ó§Ö§â§ç
-    //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-    //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // §±§à§Õ§ä§ñ§Ø§Ü§Ñ §Ü VCC
-    //GPIO_Init(GPIOC, &GPIO_InitStructure);
-    
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // §±§à§Õ§ä§ñ§Ø§Ü§Ñ §Ü VCC
+    // GPIO_Init(GPIOC, &GPIO_InitStructure);
+
     // §±§â§Ú§Ó§ñ§Ù§Ñ§ä§î EXTI4 §Ü §á§à§â§ä§å C (PC4)
-    GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource4);
-    
+    GPIO_EXTILineConfig (GPIO_PortSourceGPIOC, GPIO_PinSource4);
+
     // §¯§Ñ§ã§ä§â§à§Ú§ä§î EXTI4
     EXTI_InitStructure.EXTI_Line = EXTI_Line4;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;  // EVENT, §ß§Ö Interrupt!
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;                 // EVENT, §ß§Ö Interrupt!
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;  // §±§à §ß§Ñ§Ø§Ñ§ä§Ú§ð (0)
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-
-
+    EXTI_Init (&EXTI_InitStructure);
 }
 
 int main (void) {
@@ -92,7 +58,7 @@ int main (void) {
     SystemCoreClockUpdate();
     Delay_Init();
     Delay_Ms (500);
-  
+
     RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
     RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
@@ -120,20 +86,18 @@ int main (void) {
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init (GPIOC, &GPIO_InitStructure);
 
-    BUZZER_ON;
-    LED_ON;
-    Delay_Ms (5);
-    BUZZER_OFF;
-    LED_OFF;
+   
+    // BUZZER_ON;
+    // LED_ON;
+    // Delay_Ms (5);
+    // BUZZER_OFF;
+    // LED_OFF;
 
     EXTI_INT_INIT();
-   // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
+    // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
 
-#if (SDI_PRINT == SDI_PR_OPEN)
-    SDI_Printf_Enable();
-#else
     USART_Printf_Init (115200);
-#endif
+
     printf ("SystemClk:%d\r\n", SystemCoreClock);
     // printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
     // printf ("Standby Mode Test\r\n");
@@ -142,6 +106,7 @@ int main (void) {
     // RCC_ClocksTypeDef RCC_ClocksStatus={0};
 
     SystemCoreClockUpdate();
+
     // printf ("SystemClk:%d\r\n", SystemCoreClock);
     // printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
 
@@ -166,6 +131,10 @@ int main (void) {
     // #endif
     // printf ("\r\n Auto wake up \r\n");
 
+   //beep_Coin();
+
+
+
     NVIC_EnableIRQ (SysTick_IRQn);
     SysTick->SR &= ~(1 << 0);
     SysTick->CMP = 1000 - 1;
@@ -173,15 +142,78 @@ int main (void) {
     SysTick->CTLR = 0xB;
 
 
-    //PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
+//§µ§ã§á§Ö§ç
+//    tone1(1500, 80);
+// delay(50);
+// tone1(2000, 80);
+
+//Coin pickup (Mario)
+// tone1(1500, 60);
+// tone1(2000, 80);
+
+//Jump
+// tone1(800, 50);
+// delay(30);
+// tone1(1200, 70);
+
+tone1(1800, 30);
+delay(1150);
+tone1(400, 100);
+delay(1150);
+tone1(1200, 40);
+delay(1150);
+ tone1(1200, 35);
+    tone1(1600, 35);
+delay(1150);
+
+
+   tone1(1000, 40);
+    tone1(1400, 40);
+    tone1(1800, 60);
+
+    delay(1150);
+
+     tone1(1300, 60);
+    tone1(1700, 60);
+    tone1(2000, 80);
+    // tone1(1319, 125);  // E
+    // tone1(1175, 125);  // D
+    // tone1(740, 250);   // F#
+    // tone1(831, 250);   // G#
+    // delay(125);
+    // tone1(1245, 125);  // C#
+    // tone1(1109, 125);  // B
+    // tone1(587, 250);   // D
+    // tone1(740, 250);   // E
+    // delay(125);
+    // tone1(1109, 125);  // B
+    // tone1(1046, 125);  // A
+    // tone1(554, 250);   // C#
+    // tone1(740, 250);   // E
+    // tone1(988, 500);   // D
+
+
+//    beep_PowerOn();
+ //   delay(2000);
+ //   beep_PowerOff();
+//    delay(2000);
+//delay(2000);
+//    beep_Click();
+//delay(2000);
+//    beep_OK();
+//delay(2000);
+
+
+
+    // PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
 
     gotoDeepSleep();
 
     while (1) {
         // Delay_Ms(1000);
 
-        //PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
-        // sleep_count++;
+        // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
+        //  sleep_count++;
 
         // printf ("SysTick %d\r\n", millisec);
 
@@ -189,31 +221,38 @@ int main (void) {
         b.tick();
 
 
-        if (b.press()){
+        if (b.press()) {
             printf ("Press\n");
-            LED_ON;}
+            LED_ON;
+        }
         if (b.click())
             printf ("Click\n");
         if (b.hold())
             printf ("Hold\n");
-        if (b.releaseHold()){
+        if (b.releaseHold()) {
             printf ("ReleaseHold\n");
-           
         }
-        if (b.step())
+
+        if (b.step()) {
             printf ("Step\n");
+            BUZZER_ON;
+            delay (5);
+            BUZZER_OFF;
+        }
+
+
         if (b.releaseStep())
             printf ("releaseStep\n");
-        if (b.release()){
+        if (b.release()) {
             printf ("Release\n");
             LED_OFF;
         }
         if (b.hasClicks()) {
             printf ("Clicks: %d\n", b.getClicks());
         }
-        if (b.timeout()){
+        if (b.timeout()) {
             printf ("Timeout\n");
-             gotoDeepSleep();
+            gotoDeepSleep();
         }
         // printf ("Run in main\r\n");
         //  printf (BOLD FG (226) "ZEPHYR + RTT 256\r\n" RESET);
@@ -234,20 +273,20 @@ void gotoDeepSleep (void) {
     GPIO_PinRemapConfig (GPIO_Remap_SDI_Disable, ENABLE);  // §°§ä§Ü§Ý§ð§é§Ú§ä§î SWD
 
     // §£§Ü§Ý§ð§é§Ú§ä§î GPIO §Ú PWR
-    //RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
-    //RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
+    // RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
+    // RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
 
     // === §£§³§¦ GPIO §£ §¡§¯§¡§­§°§¤§°§£§½§« §²§¦§¨§ª§® (§Þ§Ú§ß§Ú§Þ§å§Þ §ä§à§Ü§Ñ) ===
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;  // ANALOG INPUT - §Þ§Ú§ß§Ú§Þ§å§Þ!
 
-  //  GPIO_Init (GPIOA, &GPIO_InitStructure);
-  //  GPIO_Init (GPIOC, &GPIO_InitStructure);
-  //  GPIO_Init (GPIOD, &GPIO_InitStructure);
+                                                   //  GPIO_Init (GPIOA, &GPIO_InitStructure);
+    //  GPIO_Init (GPIOC, &GPIO_InitStructure);
+    //  GPIO_Init (GPIOD, &GPIO_InitStructure);
 
     // // === §°§´§¬§­§À§¹§ª§´§¾ §£§³§¦ §±§¦§²§ª§¶§¦§²§ª§«§¯§½§¦ §¢§­§°§¬§ª ===
     // // APB2
-    // RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | 
+    // RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA |
     //                             RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO |
     //                             RCC_APB2Periph_ADC1 | RCC_APB2Periph_TIM1 |
     //                             RCC_APB2Periph_SPI1 | RCC_APB2Periph_USART1,
@@ -260,7 +299,7 @@ void gotoDeepSleep (void) {
 
     // === §°§´§¬§­§À§¹§ª§´§¾ HSI (§Ó§ß§å§ä§â§Ö§ß§ß§Ú§Û §Ô§Ö§ß§Ö§â§Ñ§ä§à§â 24 §®§¤§è) ===
     // §¿§ä§à §Õ§Ñ§ã§ä §à§ã§ß§à§Ó§ß§å§ð §ï§Ü§à§ß§à§Þ§Ú§ð!
-  //  RCC_HSICmd (DISABLE);
+    //  RCC_HSICmd (DISABLE);
 
     // // === §£§°§«§´§ª §£ STANDBY §¢§¦§© §£§°§©§£§²§¡§´§¡ ===
     PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);

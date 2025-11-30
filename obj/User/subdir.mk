@@ -5,10 +5,12 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../User/buzzer.c \
 ../User/ch32v00x_it.c \
 ../User/system_ch32v00x.c 
 
 C_DEPS += \
+./User/buzzer.d \
 ./User/ch32v00x_it.d \
 ./User/system_ch32v00x.d 
 
@@ -19,6 +21,7 @@ CPP_DEPS += \
 ./User/main.d 
 
 OBJS += \
+./User/buzzer.o \
 ./User/ch32v00x_it.o \
 ./User/main.o \
 ./User/system_ch32v00x.o 

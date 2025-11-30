@@ -1,10 +1,10 @@
-Peripheral/src/ch32v00x_dbgmcu.o: ../SRC/Peripheral/src/ch32v00x_dbgmcu.c \
- f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_dbgmcu.h \
+User/buzzer.o: ../User/buzzer.c ../User/buzzer_tunes.h ../User/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/SRC/Core/core_riscv.h \
  f:/CH32V003_MotorControl/User/system_ch32v00x.h \
  f:/CH32V003_MotorControl/User/ch32v00x_conf.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_adc.h \
+ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_dbgmcu.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_dma.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_exti.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_flash.h \
@@ -23,7 +23,9 @@ Peripheral/src/ch32v00x_dbgmcu.o: ../SRC/Peripheral/src/ch32v00x_dbgmcu.c \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h
 
-f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_dbgmcu.h:
+../User/buzzer_tunes.h:
+
+../User/debug.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
 
@@ -34,6 +36,8 @@ f:/CH32V003_MotorControl/User/system_ch32v00x.h:
 f:/CH32V003_MotorControl/User/ch32v00x_conf.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_adc.h:
+
+f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_dbgmcu.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_dma.h:
 

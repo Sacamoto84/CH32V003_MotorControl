@@ -1,16 +1,9 @@
-/********************************** (C) COPYRIGHT  *******************************
- * File Name          : debug.c
- * Author             : WCH
- * Version            : V1.0.0
- * Date               : 2022/08/08
- * Description        : This file contains all the functions prototypes for UART
- *                      Printf , Delay functions.
- *********************************************************************************
- * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * Attention: This software (modified or not) and binary are used for 
- * microcontroller manufactured by Nanjing Qinheng Microelectronics.
- *******************************************************************************/
 #include <debug.h>
+
+void delay (int time) {
+    uint64_t now = millisec;
+    while (millisec <= now + time) { }
+}
 
 static uint8_t  p_us = 0;
 static uint16_t p_ms = 0;
