@@ -6,7 +6,9 @@
 
 uButton b;
 
-extern "C" void tone1(uint16_t frequency, uint16_t duration_ms);
+extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
+
+void TIM1_PWMOut_CH2N_Init (u16 arr, u16 psc, u16 ccp);
 
 /* Global define */
 // §µ§Õ§à§Ò§ß§í§Ö §Þ§Ñ§Ü§â§à§ã§í (§Þ§à§Ø§ß§à §á§à§Ý§à§Ø§Ú§ä§î §Ó §à§ä§Õ§Ö§Ý§î§ß§í§Û .h)
@@ -86,7 +88,7 @@ int main (void) {
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init (GPIOC, &GPIO_InitStructure);
 
-   
+
     // BUZZER_ON;
     // LED_ON;
     // Delay_Ms (5);
@@ -131,8 +133,7 @@ int main (void) {
     // #endif
     // printf ("\r\n Auto wake up \r\n");
 
-   //beep_Coin();
-
+    // beep_Coin();
 
 
     NVIC_EnableIRQ (SysTick_IRQn);
@@ -142,40 +143,42 @@ int main (void) {
     SysTick->CTLR = 0xB;
 
 
-//§µ§ã§á§Ö§ç
-//    tone1(1500, 80);
-// delay(50);
-// tone1(2000, 80);
+    TIM1_PWMOut_CH2N_Init (100, 9, 50);
 
-//Coin pickup (Mario)
-// tone1(1500, 60);
-// tone1(2000, 80);
+    // §µ§ã§á§Ö§ç
+    //     tone1(1500, 80);
+    //  delay(50);
+    //  tone1(2000, 80);
 
-//Jump
-// tone1(800, 50);
-// delay(30);
-// tone1(1200, 70);
+    // Coin pickup (Mario)
+    //  tone1(1500, 60);
+    //  tone1(2000, 80);
 
-tone1(1800, 30);
-delay(1150);
-tone1(400, 100);
-delay(1150);
-tone1(1200, 40);
-delay(1150);
- tone1(1200, 35);
-    tone1(1600, 35);
-delay(1150);
+    // Jump
+    //  tone1(800, 50);
+    //  delay(30);
+    //  tone1(1200, 70);
+
+    tone1 (1800, 30);
+    delay (1150);
+    tone1 (400, 100);
+    delay (1150);
+    tone1 (1200, 40);
+    delay (1150);
+    tone1 (1200, 35);
+    tone1 (1600, 35);
+    delay (1150);
 
 
-   tone1(1000, 40);
-    tone1(1400, 40);
-    tone1(1800, 60);
+    tone1 (1000, 40);
+    tone1 (1400, 40);
+    tone1 (1800, 60);
 
-    delay(1150);
+    delay (1150);
 
-     tone1(1300, 60);
-    tone1(1700, 60);
-    tone1(2000, 80);
+    tone1 (1300, 60);
+    tone1 (1700, 60);
+    tone1 (2000, 80);
     // tone1(1319, 125);  // E
     // tone1(1175, 125);  // D
     // tone1(740, 250);   // F#
@@ -193,21 +196,20 @@ delay(1150);
     // tone1(988, 500);   // D
 
 
-//    beep_PowerOn();
- //   delay(2000);
- //   beep_PowerOff();
-//    delay(2000);
-//delay(2000);
-//    beep_Click();
-//delay(2000);
-//    beep_OK();
-//delay(2000);
-
+    //  beep_PowerOn();
+    // delay(2000);
+    // beep_PowerOff();
+    //  delay(2000);
+    // delay(2000);
+    //  beep_Click();
+    // delay(2000);
+    //  beep_OK();
+    // delay(2000);
 
 
     // PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
 
-    gotoDeepSleep();
+   // gotoDeepSleep();
 
     while (1) {
         // Delay_Ms(1000);
@@ -235,9 +237,8 @@ delay(1150);
 
         if (b.step()) {
             printf ("Step\n");
-            BUZZER_ON;
-            delay (5);
-            BUZZER_OFF;
+
+            tone1 (400, 100);
         }
 
 
@@ -252,7 +253,7 @@ delay(1150);
         }
         if (b.timeout()) {
             printf ("Timeout\n");
-            gotoDeepSleep();
+           // gotoDeepSleep();
         }
         // printf ("Run in main\r\n");
         //  printf (BOLD FG (226) "ZEPHYR + RTT 256\r\n" RESET);
@@ -303,4 +304,84 @@ void gotoDeepSleep (void) {
 
     // // === §£§°§«§´§ª §£ STANDBY §¢§¦§© §£§°§©§£§²§¡§´§¡ ===
     PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
+}
+
+/* PWM Output Mode Definition */
+#define PWM_MODE1 0
+#define PWM_MODE2 1
+
+/* PWM Output Mode Selection */
+// #define PWM_MODE PWM_MODE1
+#define PWM_MODE PWM_MODE2
+
+/*********************************************************************
+ * @fn      TIM1_PWMOut_Init
+ *
+ * @brief   Initializes TIM1 PWM Output.
+ *
+ * @param   arr - the period value.
+ *          psc - the prescaler value.
+ *          ccp - the pulse value.
+ *
+ * @return  none
+ */
+void TIM1_PWMOut_CH2N_Init(uint16_t arr, uint16_t psc, uint16_t ccp)
+{
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure = {0};
+    TIM_OCInitTypeDef TIM_OCInitStructure = {0};
+
+    /* 1) §´§Ñ§Ü§ä§Ú§â§à§Ó§Ñ§ß§Ú§Ö: GPIOA, AFIO §Ú TIM1 (TIM1 §ß§Ñ APB2 §å CH32V003) */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO | RCC_APB2Periph_TIM1, ENABLE);
+
+    /* 2) §¯§Ñ§ã§ä§â§à§Û§Ü§Ñ §á§Ú§ß§Ñ PA2 §Ü§Ñ§Ü AF Push-Pull */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;         // PA2 -> TIM1_CH2N
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;   // Alternate Function Push-Pull
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_30MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    /* 3) §¢§Ñ§Ù§à§Ó§Ñ§ñ §ß§Ñ§ã§ä§â§à§Û§Ü§Ñ §ä§Ñ§Û§Þ§Ö§â§Ñ */
+    TIM_TimeBaseInitStructure.TIM_Period = arr;
+    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
+    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseInit(TIM1, &TIM_TimeBaseInitStructure);
+
+    /* 4) §¬§Ñ§ß§Ñ§Ý 2 (OC2), PWM §â§Ö§Ø§Ú§Þ */
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;       // §à§ã§ß§à§Ó§ß§à§Û §Ó§í§ç§à§Õ (OC2)
+    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;     // N-§Ó§í§ç§à§Õ (OC2N) ¡ª §Ó§Ñ§Ø§ß§à
+    TIM_OCInitStructure.TIM_Pulse = ccp;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
+    TIM_OC2Init(TIM1, &TIM_OCInitStructure);
+
+    /* 5) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §á§â§Ö§Õ§Ù§Ñ§Ô§â§å§Ù§Ü§å §Õ§Ý§ñ CCR §Ú ARR */
+    TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Enable);
+    TIM_ARRPreloadConfig(TIM1, ENABLE);
+
+    /* 6) §Á§Ó§ß§à §Ù§Ñ§á§Ú§ã§í§Ó§Ñ§Ö§Þ CCR2 (§ß§Ñ §Ó§ã§ñ§Ü§Ú§Û §ã§Ý§å§é§Ñ§Û) */
+    TIM_SetCompare2(TIM1, ccp);
+
+    /* 7) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §Ô§Ý§Ñ§Ó§ß§í§Û §Ó§í§ç§à§Õ (MOE) ¡ª §à§Ò§ñ§Ù§Ñ§ä§Ö§Ý§î§ß§à §Õ§Ý§ñ TIM1 complementary outputs */
+    TIM_CtrlPWMOutputs(TIM1, ENABLE);
+
+    /* 8) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §ä§Ñ§Û§Þ§Ö§â */
+    TIM_Cmd(TIM1, ENABLE);
+}
+
+
+void PWM_SetDuty(uint16_t duty)
+{
+    TIM_SetCompare2(TIM1, duty);
+}
+
+void PWM_Enable()
+{
+    TIM_Cmd(TIM1, ENABLE);
+}
+
+void PWM_Disable()
+{
+    TIM_Cmd(TIM1, DISABLE);  // §ä§Ñ§Û§Þ§Ö§â §à§ã§ä§Ñ§ß§à§Ó§Ý§Ö§ß
 }
