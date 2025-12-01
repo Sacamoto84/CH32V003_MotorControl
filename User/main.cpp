@@ -28,12 +28,12 @@ enum class Screen {
 
 
 Screen screen = {Screen::NORMAL};
-uint16_t configBoostEnable = 0;    // ßØß—ß„ß‰ß‚ß‡ß€ß‹ß— ß‰ß‡ß‘ß‡ ßÈß‰ß‡ ß“ßÂß’ß÷ß‰ ß⁄ß„ß·ß‡ß›ßÓßŸß‡ß”ß—ß‰ßÓß„ßÒ ß“ßÂß„ß‰
-uint16_t configBoostTime = 100;    // ß£ß‚ß÷ßﬁßÒ ß“ßÂß„ß‰ß— ß” ms
-uint16_t configCurrentPower = 10;  // ß¥ß÷ß‹ßÂßÎß—ßÒ ßﬁß‡ßÎßﬂß‡ß„ß‰ßÓ 0..100
+uint16_t configBoostEnable = 0;    // –ù–∞—Å—Ç—Ä–æ–π–∫–∞ —Ç–æ–≥–æ —á—Ç–æ –±—É–¥–µ—Ç –∏—Å–ø–æ–ª—å–∑–æ–≤–∞—Ç—å—Å—è –±—É—Å—Ç
+uint16_t configBoostTime = 100;    // –í—Ä–µ–º—è –±—É—Å—Ç–∞ –≤ ms
+uint16_t configCurrentPower = 10;  // –¢–µ–∫—É—â–∞—è –º–æ—â–Ω–æ—Å—Ç—å 0..100
 
 /* Global define */
-// ßµß’ß‡ß“ßﬂßÌß÷ ßﬁß—ß‹ß‚ß‡ß„ßÌ (ßﬁß‡ßÿßﬂß‡ ß·ß‡ß›ß‡ßÿß⁄ß‰ßÓ ß” ß‡ß‰ß’ß÷ß›ßÓßﬂßÌß€ .h)
+// –£–¥–æ–±–Ω—ã–µ –º–∞–∫—Ä–æ—Å—ã (–º–æ–∂–Ω–æ –ø–æ–ª–æ–∂–∏—Ç—å –≤ –æ—Ç–¥–µ–ª—å–Ω—ã–π .h)
 #define CLRscr "\033[2J\033[H"
 #define FG(color) "\033[38;5;" #color "m"
 #define BG(color) "\033[48;5;" #color "m"
@@ -55,35 +55,35 @@ void EXTI_INT_INIT (void) {
     EXTI_InitTypeDef EXTI_InitStructure = {0};
     // GPIO_InitTypeDef GPIO_InitStructure = {0};
 
-    // ß£ß‹ß›ßßÈß⁄ß‰ßÓ AFIO ß’ß›ßÒ ßﬂß—ß„ß‰ß‚ß‡ß€ß‹ß⁄ EXTI
+    // –í–∫–ª—é—á–∏—Ç—å AFIO –¥–ª—è –Ω–∞—Å—Ç—Ä–æ–π–∫–∏ EXTI
     RCC_APB2PeriphClockCmd (RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOC, ENABLE);
 
-    // ßØß—ß„ß‰ß‚ß‡ß⁄ß‰ßÓ PC4 ß‹ß—ß‹ ß”ßÁß‡ß’ ß„ ß·ß‡ß’ß‰ßÒßÿß‹ß‡ß€ ß”ß”ß÷ß‚ßÁ
+    // –ù–∞—Å—Ç—Ä–æ–∏—Ç—å PC4 –∫–∞–∫ –≤—Ö–æ–¥ —Å –ø–æ–¥—Ç—è–∂–∫–æ–π –≤–≤–µ—Ä—Ö
     // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // ß±ß‡ß’ß‰ßÒßÿß‹ß— ß‹ VCC
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // –ü–æ–¥—Ç—è–∂–∫–∞ –∫ VCC
     // GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-    // ß±ß‚ß⁄ß”ßÒßŸß—ß‰ßÓ EXTI4 ß‹ ß·ß‡ß‚ß‰ßÂ C (PC4)
+    // –ü—Ä–∏–≤—è–∑–∞—Ç—å EXTI4 –∫ –ø–æ—Ä—Ç—É C (PC4)
     GPIO_EXTILineConfig (GPIO_PortSourceGPIOC, GPIO_PinSource4);
 
-    // ßØß—ß„ß‰ß‚ß‡ß⁄ß‰ßÓ EXTI4
+    // –ù–∞—Å—Ç—Ä–æ–∏—Ç—å EXTI4
     EXTI_InitStructure.EXTI_Line = EXTI_Line4;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;          // EVENT, ßﬂß÷ Interrupt!
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  // ß±ß‡ ßﬂß—ßÿß—ß‰ß⁄ß (0)
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;          // EVENT, –Ω–µ Interrupt!
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  // –ü–æ –Ω–∞–∂–∞—Ç–∏—é (0)
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init (&EXTI_InitStructure);
 }
 
 void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
-    // ßπß⁄ß‰ß—ß÷ßﬁ boostEnable
-    // ß±ß‚ß‡ß”ß÷ß‚ß‹ß— ß„ßÂßÎß÷ß„ß‰ß”ß‡ß”ß—ßﬂß⁄ßÒ ß·ß÷ß‚ß÷ßﬁß÷ßﬂßﬂß‡ß€
+    // –ß–∏—Ç–∞–µ–º boostEnable
+    // –ü—Ä–æ–≤–µ—Ä–∫–∞ —Å—É—â–µ—Å—Ç–≤–æ–≤–∞–Ω–∏—è –ø–µ—Ä–µ–º–µ–Ω–Ω–æ–π
     uint32_t temp = EEPROM_readVar (id);
     // printf ("temp: %d\n", temp);
     if (temp == -1) {
-        // ß±ß÷ß‚ß÷ßﬁß÷ßﬂßﬂß‡ß€ ßﬂß÷ß‰
+        // –ü–µ—Ä–µ–º–µ–Ω–Ω–æ–π –Ω–µ—Ç
         printf ("EEPROM id:%d ! Not Present !\n", id);
-        uint16_t res = EEPROM_saveVar (id, def);  // ß≥ß‡ßÁß‚ß—ßﬂß⁄ß‰ßÓ ß·ß‡ ßÂßﬁß‡ß›ßÈß—ßﬂß⁄ß 0
+        uint16_t res = EEPROM_saveVar (id, def);  // –°–æ—Ö—Ä–∞–Ω–∏—Ç—å –ø–æ —É–º–æ–ª—á–∞–Ω–∏—é 0
         printf ("EEPROM Save code:%d\n", res);
         uint16_t test = EEPROM_readVar (id);
         printf ("EEPROM Verification id:%d Value: %d\n", id, test);
@@ -108,8 +108,8 @@ void userEEPROM() {
 
 int main (void) {
 
-    // ß≤ß—ßŸß“ß›ß‡ß‹ß⁄ß‚ßÂß÷ßﬁ ßﬂß‡ß‚ßﬁß—ß›ßÓßﬂßÌß€ ß’ß”ßÂßÁß·ß‚ß‡ß”ß‡ß’ßﬂßÌß€ ß‡ß‰ß›ß—ß’ß‡ßÈßﬂßÌß€ ß⁄ßﬂß‰ß÷ß‚ßÊß÷ß€ß„ ßﬂß—ß”ß„ß÷ß‘ß’ß—
-    // (ßŸß—ß·ß⁄ß„ßÌß”ß—ß÷ß‰ß„ßÒ ß” ß‡ß·ßËß⁄ß⁄-ß“ß—ß€ß‰ßÌ ß·ß‚ß⁄ ß·ß÷ß‚ß”ß‡ß€ ß·ß‚ß‡ßÍß⁄ß”ß‹ß÷)
+    // –†–∞–∑–±–ª–æ–∫–∏—Ä—É–µ–º –Ω–æ—Ä–º–∞–ª—å–Ω—ã–π –¥–≤—É—Ö–ø—Ä–æ–≤–æ–¥–Ω—ã–π –æ—Ç–ª–∞–¥–æ—á–Ω—ã–π –∏–Ω—Ç–µ—Ä—Ñ–µ–π—Å –Ω–∞–≤—Å–µ–≥–¥–∞
+    // (–∑–∞–ø–∏—Å—ã–≤–∞–µ—Ç—Å—è –≤ –æ–ø—Ü–∏–∏-–±–∞–π—Ç—ã –ø—Ä–∏ –ø–µ—Ä–≤–æ–π –ø—Ä–æ—à–∏–≤–∫–µ)
 
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -197,7 +197,7 @@ int main (void) {
     tone1 (1500, 150);
 
     // delay (1000);
-    //  --- ß≥ß≠ßµß®ß¶ß¢ßØßΩß¶ ß©ß£ßµß¨ß™ ---
+    //  --- –°–õ–£–ñ–ï–ë–ù–´–ï –ó–í–£–ö–ò ---
     //  buzzer_ok();
     //   delay (1000);
 
@@ -214,7 +214,7 @@ int main (void) {
     //  buzzer_warning_double();
     // // delay (1000);
 
-    //  buzzer_click(); //ß¨ß‡ß‚ß‡ß‰ß‹ß⁄ß€
+    //  buzzer_click(); //–ö–æ—Ä–æ—Ç–∫–∏–π
     //  delay (1000);
 
     //  buzzer_success_long();
@@ -232,7 +232,7 @@ int main (void) {
     //  buzzer_notify();
     //  delay (1000);
 
-    // // ß•ß‡ß·ß‡ß›ßﬂß⁄ß‰ß÷ß›ßÓßﬂßÌß÷ ß„ß‰ß⁄ß›ß⁄ßŸß‡ß”ß—ßﬂßﬂßÌß÷:
+    // // –î–æ–ø–æ–ª–Ω–∏—Ç–µ–ª—å–Ω—ã–µ —Å—Ç–∏–ª–∏–∑–æ–≤–∞–Ω–Ω—ã–µ:
     // buzzer_ios_click();
     // delay (1000);
 
@@ -270,10 +270,10 @@ int main (void) {
             ScreenNormal();
         }
 
-        if (screen == Screen::SET_POWER){
-            ScreenNormal();//TODO
+        if (screen == Screen::SET_POWER) {
+            ScreenNormal();  // TODO
         }
-        
+
         if (screen == Screen::SET_BOOST_POWER) {
             ScreenBoostPower();
         }
@@ -326,12 +326,22 @@ void ScreenNormal (void) {
 
         if (b.getClicks() == 2) {
             // SET_POWER
-            screen = Screen::SET_POWER;
+            //screen = Screen::SET_POWER;
+
+            buzzer_ios_click();
+            delay (200);
+            buzzer_ios_click();
         }
 
         if (b.getClicks() == 3) {
             // SET_POWER
-            screen = Screen::SET_POWER;
+            //screen = Screen::SET_POWER;
+            
+            buzzer_ios_click();
+            delay (200);
+            buzzer_ios_click();
+            delay (200);
+            buzzer_ios_click();
         }
 
         if (b.getClicks() == 4) {
@@ -353,7 +363,7 @@ void ScreenNormal (void) {
             buzzer_shutdown();
             buzzer_shutdown();
 
-            __disable_irq();  // ß‡ß‰ß‹ß›ßßÈß—ß÷ßﬁ ß”ß„ß÷ ß·ß‚ß÷ß‚ßÌß”ß—ßﬂß⁄ßÒ
+            __disable_irq();  // –æ—Ç–∫–ª—é—á–∞–µ–º –≤—Å–µ –ø—Ä–µ—Ä—ã–≤–∞–Ω–∏—è
             NVIC_SystemReset();
             while (1);
         }
@@ -368,11 +378,10 @@ void ScreenNormal (void) {
 
 void ScreenBoostPower (void) {
 
-     if (b.hold()) {
+    if (b.hold()) {
         screen = Screen::NORMAL;
         buzzer_shutdown();
     }
-
 }
 
 void ScreenBoostEnable (void) {
@@ -383,22 +392,43 @@ void ScreenBoostEnable (void) {
         LED_OFF;
 
 
+    // if (b.click()) {
+        
+
+    //     if (configBoostEnable)
+    //         configBoostEnable = 0;
+    //     else
+    //         configBoostEnable = 1;
+
+    //     printf ("ScreenBoostEnable Click %d\n", configBoostEnable);
+    
+    //     buzzer_ios_click();
+    // }
+
+
     if (b.hasClicks()) {
         printf ("Clicks: %d\n", b.getClicks());
 
-        if (b.getClicks() == 2) {
-            if (configBoostEnable)
-                configBoostEnable = 0;
-            else
-                configBoostEnable = 1;
-            buzzer_ok();
-        }
-    }
-
-    if (b.hold()) {
+     if (b.getClicks() == 1) {
+         if (configBoostEnable)
+             configBoostEnable = 0;
+         else
+             configBoostEnable = 1;
+         buzzer_ok();
+     }
+       if (b.getClicks() == 2) {
         screen = Screen::NORMAL;
         buzzer_shutdown();
+        b.reset();
+        LED_OFF;
+     }
     }
+
+    // if (b.hold()) {
+    //     screen = Screen::NORMAL;
+    //     buzzer_shutdown();
+    //     b.reset();
+    // }
 }
 
 void gotoDeepSleep (void) {
@@ -407,24 +437,24 @@ void gotoDeepSleep (void) {
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
 
-    // === ß¨ß≤ß™ß¥ß™ßπß¶ß≥ß¨ß™ ß£ß°ß®ßØß∞: ß∞ß‰ß‹ß›ßßÈß⁄ß‰ßÓ ß‡ß‰ß›ß—ß’ß‹ßÂ ===
-    // ßøß‰ß‡ ß•ß∞ß≠ß®ßØß∞ ß“ßÌß‰ßÓ ß·ß÷ß‚ß”ßÌßﬁ!
+    // === –ö–†–ò–¢–ò–ß–ï–°–ö–ò –í–ê–ñ–ù–û: –û—Ç–∫–ª—é—á–∏—Ç—å –æ—Ç–ª–∞–¥–∫—É ===
+    // –≠—Ç–æ –î–û–õ–ñ–ù–û –±—ã—Ç—å –ø–µ—Ä–≤—ã–º!
     RCC_APB2PeriphClockCmd (RCC_APB2Periph_AFIO, ENABLE);
-    GPIO_PinRemapConfig (GPIO_Remap_SDI_Disable, ENABLE);  // ß∞ß‰ß‹ß›ßßÈß⁄ß‰ßÓ SWD
+    GPIO_PinRemapConfig (GPIO_Remap_SDI_Disable, ENABLE);  // –û—Ç–∫–ª—é—á–∏—Ç—å SWD
 
-    // ß£ß‹ß›ßßÈß⁄ß‰ßÓ GPIO ß⁄ PWR
+    // –í–∫–ª—é—á–∏—Ç—å GPIO –∏ PWR
     // RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
     // RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
 
-    // === ß£ß≥ß¶ GPIO ß£ ß°ßØß°ß≠ß∞ß§ß∞ß£ßΩß´ ß≤ß¶ß®ß™ßÆ (ßﬁß⁄ßﬂß⁄ßﬁßÂßﬁ ß‰ß‡ß‹ß—) ===
+    // === –í–°–ï GPIO –í –ê–ù–ê–õ–û–ì–û–í–´–ô –†–ï–ñ–ò–ú (–º–∏–Ω–∏–º—É–º —Ç–æ–∫–∞) ===
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;  // ANALOG INPUT - ßﬁß⁄ßﬂß⁄ßﬁßÂßﬁ!
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;  // ANALOG INPUT - –º–∏–Ω–∏–º—É–º!
 
                                                    //  GPIO_Init (GPIOA, &GPIO_InitStructure);
     //  GPIO_Init (GPIOC, &GPIO_InitStructure);
     //  GPIO_Init (GPIOD, &GPIO_InitStructure);
 
-    // // === ß∞ß¥ß¨ß≠ß¿ßπß™ß¥ßæ ß£ß≥ß¶ ß±ß¶ß≤ß™ß∂ß¶ß≤ß™ß´ßØßΩß¶ ß¢ß≠ß∞ß¨ß™ ===
+    // // === –û–¢–ö–õ–Æ–ß–ò–¢–¨ –í–°–ï –ü–ï–†–ò–§–ï–†–ò–ô–ù–´–ï –ë–õ–û–ö–ò ===
     // // APB2
     // RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA |
     //                             RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO |
@@ -437,10 +467,10 @@ void gotoDeepSleep (void) {
     //                             RCC_APB1Periph_I2C1,
     //                         DISABLE);
 
-    // === ß∞ß¥ß¨ß≠ß¿ßπß™ß¥ßæ HSI (ß”ßﬂßÂß‰ß‚ß÷ßﬂßﬂß⁄ß€ ß‘ß÷ßﬂß÷ß‚ß—ß‰ß‡ß‚ 24 ßÆß§ßË) ===
-    // ßøß‰ß‡ ß’ß—ß„ß‰ ß‡ß„ßﬂß‡ß”ßﬂßÂß ßÔß‹ß‡ßﬂß‡ßﬁß⁄ß!
+    // === –û–¢–ö–õ–Æ–ß–ò–¢–¨ HSI (–≤–Ω—É—Ç—Ä–µ–Ω–Ω–∏–π –≥–µ–Ω–µ—Ä–∞—Ç–æ—Ä 24 –ú–ì—Ü) ===
+    // –≠—Ç–æ –¥–∞—Å—Ç –æ—Å–Ω–æ–≤–Ω—É—é —ç–∫–æ–Ω–æ–º–∏—é!
     //  RCC_HSICmd (DISABLE);
 
-    // // === ß£ß∞ß´ß¥ß™ ß£ STANDBY ß¢ß¶ß© ß£ß∞ß©ß£ß≤ß°ß¥ß° ===
+    // // === –í–û–ô–¢–ò –í STANDBY –ë–ï–ó –í–û–ó–í–†–ê–¢–ê ===
     PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
 }
