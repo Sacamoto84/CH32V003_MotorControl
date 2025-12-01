@@ -14,20 +14,23 @@ extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
 
 void TIM1_PWMOut_CH2N_Init (u16 arr, u16 psc, u16 ccp);
 
+void ScreenBoostPower (void);
+void ScreenNormal (void);
+void ScreenBoostEnable (void);
 
 enum class Screen {
     NORMAL,
     BUSY,
     SET_POWER,
-    SET_BOOST,
+    SET_BOOST_ENABLE,
     SET_BOOST_POWER,
 };
 
 
 Screen screen = {Screen::NORMAL};
-uint16_t configBoostEnable = 0;  // §¯§Ñ§ã§ä§â§à§Û§Ü§Ñ §ä§à§Ô§à §é§ä§à §Ò§å§Õ§Ö§ä §Ú§ã§á§à§Ý§î§Ù§à§Ó§Ñ§ä§î§ã§ñ §Ò§å§ã§ä
-uint16_t configBoostTime = 100;  // §£§â§Ö§Þ§ñ §Ò§å§ã§ä§Ñ §Ó ms
-
+uint16_t configBoostEnable = 0;    // §¯§Ñ§ã§ä§â§à§Û§Ü§Ñ §ä§à§Ô§à §é§ä§à §Ò§å§Õ§Ö§ä §Ú§ã§á§à§Ý§î§Ù§à§Ó§Ñ§ä§î§ã§ñ §Ò§å§ã§ä
+uint16_t configBoostTime = 100;    // §£§â§Ö§Þ§ñ §Ò§å§ã§ä§Ñ §Ó ms
+uint16_t configCurrentPower = 10;  // §´§Ö§Ü§å§ë§Ñ§ñ §Þ§à§ë§ß§à§ã§ä§î 0..100
 
 /* Global define */
 // §µ§Õ§à§Ò§ß§í§Ö §Þ§Ñ§Ü§â§à§ã§í (§Þ§à§Ø§ß§à §á§à§Ý§à§Ø§Ú§ä§î §Ó §à§ä§Õ§Ö§Ý§î§ß§í§Û .h)
@@ -76,17 +79,17 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
     // §¹§Ú§ä§Ñ§Ö§Þ boostEnable
     // §±§â§à§Ó§Ö§â§Ü§Ñ §ã§å§ë§Ö§ã§ä§Ó§à§Ó§Ñ§ß§Ú§ñ §á§Ö§â§Ö§Þ§Ö§ß§ß§à§Û
     uint32_t temp = EEPROM_readVar (id);
-    printf ("temp: %d\n", temp);
+    // printf ("temp: %d\n", temp);
     if (temp == -1) {
         // §±§Ö§â§Ö§Þ§Ö§ß§ß§à§Û §ß§Ö§ä
         printf ("EEPROM id:%d ! Not Present !\n", id);
         uint16_t res = EEPROM_saveVar (id, def);  // §³§à§ç§â§Ñ§ß§Ú§ä§î §á§à §å§Þ§à§Ý§é§Ñ§ß§Ú§ð 0
         printf ("EEPROM Save code:%d\n", res);
         uint16_t test = EEPROM_readVar (id);
-        printf ("EEPROM Verification id:%d Value:0x%x\n", id, test);
+        printf ("EEPROM Verification id:%d Value: %d\n", id, test);
         *value = def;
     } else {
-        printf ("EEPROM id:1 Value:0x%x\n", temp);
+        printf ("EEPROM id:%d Value:%d\n", id, temp);
         *value = temp;
     }
 }
@@ -95,12 +98,19 @@ void userEEPROM() {
     EEPROM_init();
     printf ("EEPROM Demo Free: %d\n", get_free_space());
 
+    printf (".READ CONFIG Boost Enable\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);
+    printf (".READ CONFIG Boost Time\n");
     userInitVarEEPROM (2, &configBoostTime, 200);
-    
+    printf (".READ CONFIG Power\n");
+    userInitVarEEPROM (3, &configCurrentPower, 40);
 }
 
 int main (void) {
+
+    // §²§Ñ§Ù§Ò§Ý§à§Ü§Ú§â§å§Ö§Þ §ß§à§â§Þ§Ñ§Ý§î§ß§í§Û §Õ§Ó§å§ç§á§â§à§Ó§à§Õ§ß§í§Û §à§ä§Ý§Ñ§Õ§à§é§ß§í§Û §Ú§ß§ä§Ö§â§æ§Ö§Û§ã §ß§Ñ§Ó§ã§Ö§Ô§Õ§Ñ
+    // (§Ù§Ñ§á§Ú§ã§í§Ó§Ñ§Ö§ä§ã§ñ §Ó §à§á§è§Ú§Ú-§Ò§Ñ§Û§ä§í §á§â§Ú §á§Ö§â§Ó§à§Û §á§â§à§ê§Ú§Ó§Ü§Ö)
+
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -115,7 +125,11 @@ int main (void) {
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
 
     GPIO_Init (GPIOA, &GPIO_InitStructure);
-    GPIO_Init (GPIOD, &GPIO_InitStructure);
+
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 |  GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All & ~GPIO_Pin_4;
+    // GPIO_Init (GPIOD, &GPIO_InitStructure);
+
     GPIO_Init (GPIOC, &GPIO_InitStructure);
 
     // LED
@@ -149,18 +163,15 @@ int main (void) {
     printf ("\r\n---------------------------------------\n");
     printf ("SystemClk:%d\r\n", SystemCoreClock);
 
-
     userEEPROM();
-
 
     //----
     printf ("-------------------------\n");
     printf ("CONFIG Boost Enable : %d\n", configBoostEnable);
     printf ("CONFIG Boost Time   : %d ms\n", configBoostTime);
+    printf ("CONFIG Power        : %d\n", configCurrentPower);
     printf ("-------------------------\n");
     //----
-    // uint16_t test = EEPROM_readVar(1);
-
 
     // RCC_ClocksTypeDef RCC_ClocksStatus={0};
 
@@ -174,6 +185,7 @@ int main (void) {
     // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
 
     NVIC_EnableIRQ (SysTick_IRQn);
+
     SysTick->SR &= ~(1 << 0);
     SysTick->CMP = 1000 - 1;
     SysTick->CNT = 0;
@@ -250,66 +262,142 @@ int main (void) {
         // Delay_Ms(1000);
 
         // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
-        //  sleep_count++;
-
-        // printf ("SysTick %d\r\n", millisec);
 
 
         b.tick();
 
-
-        if (b.press()) {
-            printf ("Press\n");
-            LED_ON;
+        if (screen == Screen::NORMAL) {
+            ScreenNormal();
         }
-        if (b.click()) {
-            printf ("Click\n");
+
+        if (screen == Screen::SET_POWER){
+            ScreenNormal();//TODO
+        }
+        
+        if (screen == Screen::SET_BOOST_POWER) {
+            ScreenBoostPower();
+        }
+
+        if (screen == Screen::SET_BOOST_ENABLE) {
+            ScreenBoostEnable();
+        }
+    }
+}
+
+void ScreenNormal (void) {
+
+    if (b.press()) {
+        printf ("Press\n");
+        LED_ON;
+    }
+
+    if (b.click()) {
+        printf ("Click\n");
+        buzzer_ios_click();
+    }
+
+    if (b.hold()) {
+        printf ("Hold\n");
+        buzzer_warning();
+    }
+
+    if (b.releaseHold()) {
+        printf ("ReleaseHold\n");
+    }
+
+    if (b.step()) {
+        printf ("Step\n");
+
+        tone1 (400, 100);
+    }
+
+
+    if (b.releaseStep())
+        printf ("releaseStep\n");
+
+    if (b.release()) {
+        printf ("Release\n");
+        LED_OFF;
+    }
+
+    if (b.hasClicks()) {
+        printf ("Clicks: %d\n", b.getClicks());
+
+
+        if (b.getClicks() == 2) {
+            // SET_POWER
+            screen = Screen::SET_POWER;
+        }
+
+        if (b.getClicks() == 3) {
+            // SET_POWER
+            screen = Screen::SET_POWER;
+        }
+
+        if (b.getClicks() == 4) {
+            // SET_POWER
+            screen = Screen::SET_BOOST_ENABLE;
+            buzzer_ios_click();
+            delay (200);
+            buzzer_ios_click();
+            delay (200);
+            buzzer_ios_click();
+            delay (200);
             buzzer_ios_click();
         }
-        if (b.hold()) {
-            printf ("Hold\n");
-            buzzer_warning();
-        }
-        if (b.releaseHold()) {
-            printf ("ReleaseHold\n");
-        }
-
-        if (b.step()) {
-            printf ("Step\n");
-
-            tone1 (400, 100);
-        }
 
 
-        if (b.releaseStep())
-            printf ("releaseStep\n");
-        if (b.release()) {
-            printf ("Release\n");
-            LED_OFF;
-        }
-        if (b.hasClicks()) {
-            printf ("Clicks: %d\n", b.getClicks());
+        if (b.getClicks() == 5) {
+            buzzer_shutdown();
+            buzzer_shutdown();
+            buzzer_shutdown();
+            buzzer_shutdown();
 
-            if (b.getClicks() == 5) {
-                buzzer_shutdown();
-                buzzer_shutdown();
-                buzzer_shutdown();
-                buzzer_shutdown();
+            __disable_irq();  // §à§ä§Ü§Ý§ð§é§Ñ§Ö§Þ §Ó§ã§Ö §á§â§Ö§â§í§Ó§Ñ§ß§Ú§ñ
+            NVIC_SystemReset();
+            while (1);
+        }
+    }
 
-                __disable_irq();  // §à§ä§Ü§Ý§ð§é§Ñ§Ö§Þ §Ó§ã§Ö §á§â§Ö§â§í§Ó§Ñ§ß§Ú§ñ
-                NVIC_SystemReset();
-                while (1);
-            }
+    if (b.timeout()) {
+        printf ("Timeout\n");
+        buzzer_robot();
+        // gotoDeepSleep();
+    }
+}
+
+void ScreenBoostPower (void) {
+
+     if (b.hold()) {
+        screen = Screen::NORMAL;
+        buzzer_shutdown();
+    }
+
+}
+
+void ScreenBoostEnable (void) {
+    if (configBoostEnable)
+        LED_ON;
+
+    else
+        LED_OFF;
+
+
+    if (b.hasClicks()) {
+        printf ("Clicks: %d\n", b.getClicks());
+
+        if (b.getClicks() == 2) {
+            if (configBoostEnable)
+                configBoostEnable = 0;
+            else
+                configBoostEnable = 1;
+            buzzer_ok();
         }
-        if (b.timeout()) {
-            printf ("Timeout\n");
-            buzzer_robot();
-            // gotoDeepSleep();
-        }
-        // printf ("Run in main\r\n");
-        //  printf (BOLD FG (226) "ZEPHYR + RTT 256\r\n" RESET);
-        // Delay_Ms (1);
-        //   printf ("Run in main\r\n");
+    }
+
+    if (b.hold()) {
+        screen = Screen::NORMAL;
+        buzzer_shutdown();
     }
 }
 

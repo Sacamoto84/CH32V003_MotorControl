@@ -1,8 +1,17 @@
 #include <debug.h>
 
 void delay (int time) {
-    uint64_t now = millisec;
-    while (millisec <= now + time) { }
+
+    SysTick->SR &= ~(1 << 0);
+    SysTick->CMP = 1000 - 1;
+    SysTick->CNT = 0;
+    SysTick->CTLR = 0xB;
+
+    volatile uint64_t now = millisec;
+    volatile uint64_t stop = now + (uint64_t)time;
+    while (millisec <= stop) { 
+        __NOP();
+    }
 }
 
 static uint8_t  p_us = 0;
