@@ -4,11 +4,30 @@
 
 #include "uButton.h"
 
+#include "EEPROM.h"
+
 uButton b;
+
+Pwm pwm;
 
 extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
 
 void TIM1_PWMOut_CH2N_Init (u16 arr, u16 psc, u16 ccp);
+
+
+enum class Screen {
+    NORMAL,
+    BUSY,
+    SET_POWER,
+    SET_BOOST,
+    SET_BOOST_POWER,
+};
+
+
+Screen screen = {Screen::NORMAL};
+uint16_t configBoostEnable = 0;  // §¯§Ñ§ã§ä§â§à§Û§Ü§Ñ §ä§à§Ô§à §é§ä§à §Ò§å§Õ§Ö§ä §Ú§ã§á§à§Ý§î§Ù§à§Ó§Ñ§ä§î§ã§ñ §Ò§å§ã§ä
+uint16_t configBoostTime = 100;  // §£§â§Ö§Þ§ñ §Ò§å§ã§ä§Ñ §Ó ms
+
 
 /* Global define */
 // §µ§Õ§à§Ò§ß§í§Ö §Þ§Ñ§Ü§â§à§ã§í (§Þ§à§Ø§ß§à §á§à§Ý§à§Ø§Ú§ä§î §Ó §à§ä§Õ§Ö§Ý§î§ß§í§Û .h)
@@ -52,6 +71,35 @@ void EXTI_INT_INIT (void) {
     EXTI_Init (&EXTI_InitStructure);
 }
 
+void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
+
+    // §¹§Ú§ä§Ñ§Ö§Þ boostEnable
+    // §±§â§à§Ó§Ö§â§Ü§Ñ §ã§å§ë§Ö§ã§ä§Ó§à§Ó§Ñ§ß§Ú§ñ §á§Ö§â§Ö§Þ§Ö§ß§ß§à§Û
+    uint32_t temp = EEPROM_readVar (id);
+    printf ("temp: %d\n", temp);
+    if (temp == -1) {
+        // §±§Ö§â§Ö§Þ§Ö§ß§ß§à§Û §ß§Ö§ä
+        printf ("EEPROM id:%d ! Not Present !\n", id);
+        uint16_t res = EEPROM_saveVar (id, def);  // §³§à§ç§â§Ñ§ß§Ú§ä§î §á§à §å§Þ§à§Ý§é§Ñ§ß§Ú§ð 0
+        printf ("EEPROM Save code:%d\n", res);
+        uint16_t test = EEPROM_readVar (id);
+        printf ("EEPROM Verification id:%d Value:0x%x\n", id, test);
+        *value = def;
+    } else {
+        printf ("EEPROM id:1 Value:0x%x\n", temp);
+        *value = temp;
+    }
+}
+
+void userEEPROM() {
+    EEPROM_init();
+    printf ("EEPROM Demo Free: %d\n", get_free_space());
+
+    userInitVarEEPROM (1, &configBoostEnable, 0);
+    userInitVarEEPROM (2, &configBoostTime, 200);
+    
+}
+
 int main (void) {
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -90,34 +138,33 @@ int main (void) {
 
 
     // BUZZER_ON;
-    // LED_ON;
-    // Delay_Ms (5);
-    // BUZZER_OFF;
-    // LED_OFF;
+    LED_ON;
+    Delay_Ms (5);
+    LED_OFF;
 
     EXTI_INT_INIT();
-    // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
+
 
     USART_Printf_Init (115200);
-
+    printf ("\r\n---------------------------------------\n");
     printf ("SystemClk:%d\r\n", SystemCoreClock);
-    // printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
-    // printf ("Standby Mode Test\r\n");
-    // printf ("0x1FFFF800-%08x\r\n", *(u32 *)0x1FFFF800);
+
+
+    userEEPROM();
+
+
+    //----
+    printf ("-------------------------\n");
+    printf ("CONFIG Boost Enable : %d\n", configBoostEnable);
+    printf ("CONFIG Boost Time   : %d ms\n", configBoostTime);
+    printf ("-------------------------\n");
+    //----
+    // uint16_t test = EEPROM_readVar(1);
+
 
     // RCC_ClocksTypeDef RCC_ClocksStatus={0};
 
     SystemCoreClockUpdate();
-
-    // printf ("SystemClk:%d\r\n", SystemCoreClock);
-    // printf ("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
-
-    // RCC_GetClocksFreq (&RCC_ClocksStatus);
-    // printf ("SYSCLK_Frequency:%d\r\n", RCC_ClocksStatus.SYSCLK_Frequency);
-    // printf ("HCLK_Frequency:%d\r\n", RCC_ClocksStatus.HCLK_Frequency);
-    // printf ("PCLK1_Frequency:%d\r\n", RCC_ClocksStatus.PCLK1_Frequency);
-    // printf ("PCLK2_Frequency:%d\r\n", RCC_ClocksStatus.PCLK2_Frequency);
-    // //Delay_Ms(5500);
 
     // RCC_LSICmd (ENABLE);
     // while (RCC_GetFlagStatus (RCC_FLAG_LSIRDY) == RESET);
@@ -126,33 +173,21 @@ int main (void) {
     // PWR_AutoWakeUpCmd (ENABLE);
     // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
 
-    // #if (SDI_PRINT == SDI_PR_OPEN)
-    //     SDI_Printf_Enable();
-    // #else
-    //     USART_Printf_Init (115200);
-    // #endif
-    // printf ("\r\n Auto wake up \r\n");
-
-    // beep_Coin();
-
-
     NVIC_EnableIRQ (SysTick_IRQn);
     SysTick->SR &= ~(1 << 0);
     SysTick->CMP = 1000 - 1;
     SysTick->CNT = 0;
     SysTick->CTLR = 0xB;
 
-
-    TIM1_PWMOut_CH2N_Init (100, 9, 50);
-
+    // pwm.init (100, 9, 50);
 
     tone1 (1000, 100);
     tone1 (1500, 150);
 
-delay (1000);
-    // --- §³§­§µ§¨§¦§¢§¯§½§¦ §©§£§µ§¬§ª ---
-   // buzzer_ok();
-   //  delay (1000);
+    // delay (1000);
+    //  --- §³§­§µ§¨§¦§¢§¯§½§¦ §©§£§µ§¬§ª ---
+    //  buzzer_ok();
+    //   delay (1000);
 
 
     // buzzer_error();
@@ -167,8 +202,8 @@ delay (1000);
     //  buzzer_warning_double();
     // // delay (1000);
 
-   //  buzzer_click(); //§¬§à§â§à§ä§Ü§Ú§Û
-   //  delay (1000);
+    //  buzzer_click(); //§¬§à§â§à§ä§Ü§Ú§Û
+    //  delay (1000);
 
     //  buzzer_success_long();
     //  delay (1000);
@@ -207,7 +242,9 @@ delay (1000);
     //  buzzer_button_hold();delay (1000);
 
 
-    gotoDeepSleep();
+    // gotoDeepSleep();
+
+    printf ("Go...\n");
 
     while (1) {
         // Delay_Ms(1000);
@@ -225,11 +262,11 @@ delay (1000);
             printf ("Press\n");
             LED_ON;
         }
-        if (b.click()){
+        if (b.click()) {
             printf ("Click\n");
             buzzer_ios_click();
         }
-        if (b.hold()){
+        if (b.hold()) {
             printf ("Hold\n");
             buzzer_warning();
         }
@@ -252,11 +289,22 @@ delay (1000);
         }
         if (b.hasClicks()) {
             printf ("Clicks: %d\n", b.getClicks());
+
+            if (b.getClicks() == 5) {
+                buzzer_shutdown();
+                buzzer_shutdown();
+                buzzer_shutdown();
+                buzzer_shutdown();
+
+                __disable_irq();  // §à§ä§Ü§Ý§ð§é§Ñ§Ö§Þ §Ó§ã§Ö §á§â§Ö§â§í§Ó§Ñ§ß§Ú§ñ
+                NVIC_SystemReset();
+                while (1);
+            }
         }
         if (b.timeout()) {
             printf ("Timeout\n");
             buzzer_robot();
-            gotoDeepSleep();
+            // gotoDeepSleep();
         }
         // printf ("Run in main\r\n");
         //  printf (BOLD FG (226) "ZEPHYR + RTT 256\r\n" RESET);
@@ -307,80 +355,4 @@ void gotoDeepSleep (void) {
 
     // // === §£§°§«§´§ª §£ STANDBY §¢§¦§© §£§°§©§£§²§¡§´§¡ ===
     PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
-}
-
-/* PWM Output Mode Definition */
-#define PWM_MODE1 0
-#define PWM_MODE2 1
-
-/* PWM Output Mode Selection */
-// #define PWM_MODE PWM_MODE1
-#define PWM_MODE PWM_MODE2
-
-/*********************************************************************
- * @fn      TIM1_PWMOut_Init
- *
- * @brief   Initializes TIM1 PWM Output.
- *
- * @param   arr - the period value.
- *          psc - the prescaler value.
- *          ccp - the pulse value.
- *
- * @return  none
- */
-void TIM1_PWMOut_CH2N_Init (uint16_t arr, uint16_t psc, uint16_t ccp) {
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure = {0};
-    TIM_OCInitTypeDef TIM_OCInitStructure = {0};
-
-    /* 1) §´§Ñ§Ü§ä§Ú§â§à§Ó§Ñ§ß§Ú§Ö: GPIOA, AFIO §Ú TIM1 (TIM1 §ß§Ñ APB2 §å CH32V003) */
-    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO | RCC_APB2Periph_TIM1, ENABLE);
-
-    /* 2) §¯§Ñ§ã§ä§â§à§Û§Ü§Ñ §á§Ú§ß§Ñ PA2 §Ü§Ñ§Ü AF Push-Pull */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;        // PA2 -> TIM1_CH2N
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;  // Alternate Function Push-Pull
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_30MHz;
-    GPIO_Init (GPIOA, &GPIO_InitStructure);
-
-
-    /* 3) §¢§Ñ§Ù§à§Ó§Ñ§ñ §ß§Ñ§ã§ä§â§à§Û§Ü§Ñ §ä§Ñ§Û§Þ§Ö§â§Ñ */
-    TIM_TimeBaseInitStructure.TIM_Period = arr;
-    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
-    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInit (TIM1, &TIM_TimeBaseInitStructure);
-
-    /* 4) §¬§Ñ§ß§Ñ§Ý 2 (OC2), PWM §â§Ö§Ø§Ú§Þ */
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;    // §à§ã§ß§à§Ó§ß§à§Û §Ó§í§ç§à§Õ (OC2)
-    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;  // N-§Ó§í§ç§à§Õ (OC2N) ¡ª §Ó§Ñ§Ø§ß§à
-    TIM_OCInitStructure.TIM_Pulse = ccp;
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
-    TIM_OC2Init (TIM1, &TIM_OCInitStructure);
-
-    /* 5) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §á§â§Ö§Õ§Ù§Ñ§Ô§â§å§Ù§Ü§å §Õ§Ý§ñ CCR §Ú ARR */
-    TIM_OC2PreloadConfig (TIM1, TIM_OCPreload_Enable);
-    TIM_ARRPreloadConfig (TIM1, ENABLE);
-
-    /* 6) §Á§Ó§ß§à §Ù§Ñ§á§Ú§ã§í§Ó§Ñ§Ö§Þ CCR2 (§ß§Ñ §Ó§ã§ñ§Ü§Ú§Û §ã§Ý§å§é§Ñ§Û) */
-    TIM_SetCompare2 (TIM1, ccp);
-
-    /* 7) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §Ô§Ý§Ñ§Ó§ß§í§Û §Ó§í§ç§à§Õ (MOE) ¡ª §à§Ò§ñ§Ù§Ñ§ä§Ö§Ý§î§ß§à §Õ§Ý§ñ TIM1 complementary outputs */
-    TIM_CtrlPWMOutputs (TIM1, ENABLE);
-
-    /* 8) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §ä§Ñ§Û§Þ§Ö§â */
-    TIM_Cmd (TIM1, ENABLE);
-}
-
-void PWM_SetDuty (uint16_t duty) {
-    TIM_SetCompare2 (TIM1, duty);
-}
-
-void PWM_Enable() {
-    TIM_Cmd (TIM1, ENABLE);
-}
-
-void PWM_Disable() {
-    TIM_Cmd (TIM1, DISABLE);  // §ä§Ñ§Û§Þ§Ö§â §à§ã§ä§Ñ§ß§à§Ó§Ý§Ö§ß
 }

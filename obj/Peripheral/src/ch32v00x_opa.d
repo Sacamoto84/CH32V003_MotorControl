@@ -14,6 +14,7 @@ Peripheral/src/ch32v00x_opa.o: ../SRC/Peripheral/src/ch32v00x_opa.c \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h \
  f:/CH32V003_MotorControl/User/ch32v00x_it.h \
  f:/CH32V003_MotorControl/SRC/Debug/debug.h \
+ f:/CH32V003_MotorControl/User/pwm.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_misc.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_pwr.h \
@@ -52,6 +53,8 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h:
 f:/CH32V003_MotorControl/User/ch32v00x_it.h:
 
 f:/CH32V003_MotorControl/SRC/Debug/debug.h:
+
+f:/CH32V003_MotorControl/User/pwm.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h:
 

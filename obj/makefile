@@ -70,13 +70,26 @@ main-build: Standby_Mode.elf secondary-outputs
 
 # Tool invocations
 Standby_Mode.elf: $(OBJS) $(USER_OBJS_ESCAPE)
-	@	riscv-none-embed-g++ -march=rv32ecxw -mabi=ilp32e -msmall-data-limit=0 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "f:/CH32V003_MotorControl/SRC/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"Standby_Mode.map" --specs=nano.specs --specs=nosys.specs -o "Standby_Mode.elf" $(OBJS) $(LIBS) -lprintf
+	@echo 'Building target: $@'
+	@echo 'Invoking: GNU RISC-V Cross C Linker'
+	riscv-none-embed-g++ -march=rv32ecxw -mabi=ilp32e -msmall-data-limit=0 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "f:/CH32V003_MotorControl/SRC/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"Standby_Mode.map" --specs=nano.specs --specs=nosys.specs -o "Standby_Mode.elf" $(OBJS) $(LIBS) -lprintf
+	@echo 'Finished building target: $@'
+	@
 Standby_Mode.hex: Standby_Mode.elf
+	@echo 'Invoking: GNU RISC-V Cross Create Flash Image'
 	@	riscv-none-embed-objcopy -O ihex "Standby_Mode.elf" "Standby_Mode.hex"
+	@echo 'Finished building $@'
+	@
 Standby_Mode.lst: Standby_Mode.elf
+	@echo 'Invoking: GNU RISC-V Cross Create Listing'
 	@	riscv-none-embed-objdump --all-headers --demangle --disassemble -M xw "Standby_Mode.elf" > "Standby_Mode.lst"
+	@echo 'Finished building $@'
+	@
 Standby_Mode.siz: Standby_Mode.elf
+	@echo 'Invoking: GNU RISC-V Cross Print Size'
 	riscv-none-embed-size --format=berkeley "Standby_Mode.elf"
+	@echo 'Finished building $@'
+	@
 
 # Other Targets
 clean:

@@ -1,6 +1,4 @@
-User/ch32v00x_it.o: ../User/ch32v00x_it.c \
- f:/CH32V003_MotorControl/User/ch32v00x_it.h \
- f:/CH32V003_MotorControl/SRC/Debug/debug.h \
+User/pwm.o: ../User/pwm.cpp f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/SRC/Core/core_riscv.h \
  f:/CH32V003_MotorControl/User/system_ch32v00x.h \
@@ -12,6 +10,7 @@ User/ch32v00x_it.o: ../User/ch32v00x_it.c \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_flash.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_gpio.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h \
+ f:/CH32V003_MotorControl/User/ch32v00x_it.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_misc.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_pwr.h \
@@ -23,8 +22,6 @@ User/ch32v00x_it.o: ../User/ch32v00x_it.c \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/User/pwm.h
-
-f:/CH32V003_MotorControl/User/ch32v00x_it.h:
 
 f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
@@ -49,6 +46,8 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_flash.h:
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_gpio.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h:
+
+f:/CH32V003_MotorControl/User/ch32v00x_it.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h:
 

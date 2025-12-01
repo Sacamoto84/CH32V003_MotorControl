@@ -8,6 +8,8 @@
 #include <ch32v00x.h>
 #include <stdio.h>
 
+#include <pwm.h>
+
 /* UART Printf Definition */
 #define DEBUG_UART1_NoRemap   1  //Tx-PD5
 #define DEBUG_UART1_Remap1    2  //Tx-PD0
@@ -46,6 +48,14 @@ extern uint64_t millisec;
 extern void gotoDeepSleep (void);
 
 extern void delay (int time);
+
+
+//pwm.cpp
+extern void PWM_SetDuty (uint16_t duty);
+extern void PWM_Enable(void);
+extern void PWM_Disable(void);
+
+
 
 #ifdef __cplusplus
 }
