@@ -1,6 +1,6 @@
 User/ch32v00x_it.o: ../User/ch32v00x_it.c \
  f:/CH32V003_MotorControl/User/ch32v00x_it.h \
- f:/CH32V003_MotorControl/User/debug.h \
+ f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/SRC/Core/core_riscv.h \
  f:/CH32V003_MotorControl/User/system_ch32v00x.h \
@@ -25,7 +25,7 @@ User/ch32v00x_it.o: ../User/ch32v00x_it.c \
 
 f:/CH32V003_MotorControl/User/ch32v00x_it.h:
 
-f:/CH32V003_MotorControl/User/debug.h:
+f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
 

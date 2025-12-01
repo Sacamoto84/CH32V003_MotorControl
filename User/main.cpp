@@ -46,8 +46,8 @@ void EXTI_INT_INIT (void) {
 
     // §¯§Ñ§ã§ä§â§à§Ú§ä§î EXTI4
     EXTI_InitStructure.EXTI_Line = EXTI_Line4;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;                 // EVENT, §ß§Ö Interrupt!
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;  // §±§à §ß§Ñ§Ø§Ñ§ä§Ú§ð (0)
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Event;          // EVENT, §ß§Ö Interrupt!
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  // §±§à §ß§Ñ§Ø§Ñ§ä§Ú§ð (0)
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init (&EXTI_InitStructure);
 }
@@ -145,71 +145,69 @@ int main (void) {
 
     TIM1_PWMOut_CH2N_Init (100, 9, 50);
 
-    // §µ§ã§á§Ö§ç
-    //     tone1(1500, 80);
-    //  delay(50);
-    //  tone1(2000, 80);
 
-    // Coin pickup (Mario)
-    //  tone1(1500, 60);
-    //  tone1(2000, 80);
+    tone1 (1000, 100);
+    tone1 (1500, 150);
 
-    // Jump
-    //  tone1(800, 50);
-    //  delay(30);
-    //  tone1(1200, 70);
-
-    tone1 (1800, 30);
-    delay (1150);
-    tone1 (400, 100);
-    delay (1150);
-    tone1 (1200, 40);
-    delay (1150);
-    tone1 (1200, 35);
-    tone1 (1600, 35);
-    delay (1150);
+delay (1000);
+    // --- §³§­§µ§¨§¦§¢§¯§½§¦ §©§£§µ§¬§ª ---
+   // buzzer_ok();
+   //  delay (1000);
 
 
-    tone1 (1000, 40);
-    tone1 (1400, 40);
-    tone1 (1800, 60);
+    // buzzer_error();
+    // delay (1000);
 
-    delay (1150);
+    // buzzer_error_strong();
+    // delay (1000);
 
-    tone1 (1300, 60);
-    tone1 (1700, 60);
-    tone1 (2000, 80);
-    // tone1(1319, 125);  // E
-    // tone1(1175, 125);  // D
-    // tone1(740, 250);   // F#
-    // tone1(831, 250);   // G#
-    // delay(125);
-    // tone1(1245, 125);  // C#
-    // tone1(1109, 125);  // B
-    // tone1(587, 250);   // D
-    // tone1(740, 250);   // E
-    // delay(125);
-    // tone1(1109, 125);  // B
-    // tone1(1046, 125);  // A
-    // tone1(554, 250);   // C#
-    // tone1(740, 250);   // E
-    // tone1(988, 500);   // D
+    //  buzzer_warning();
+    //  delay (1000);
+
+    //  buzzer_warning_double();
+    // // delay (1000);
+
+   //  buzzer_click(); //§¬§à§â§à§ä§Ü§Ú§Û
+   //  delay (1000);
+
+    //  buzzer_success_long();
+    //  delay (1000);
+
+    //  buzzer_critical();
+    //  delay (1000);
+
+    //  buzzer_beepboop();
+    //  delay (1000);
+
+    //  buzzer_access_denied();
+    //  delay (1000);
+
+    //  buzzer_notify();
+    //  delay (1000);
+
+    // // §¥§à§á§à§Ý§ß§Ú§ä§Ö§Ý§î§ß§í§Ö §ã§ä§Ú§Ý§Ú§Ù§à§Ó§Ñ§ß§ß§í§Ö:
+    // buzzer_ios_click();
+    // delay (1000);
+
+    // buzzer_android_notify();
+    // delay (1000);
+
+    // buzzer_robot();
+    // delay (1000);
+
+    // buzzer_microwave_done();
+    // delay (1000);
+
+    // buzzer_winxp_msg();
+    // delay (1000);
+
+    // buzzer_startup();delay (1000);
+    //  buzzer_shutdown();delay (1000);
+    //   buzzer_charging();delay (1000);
+    //  buzzer_button_hold();delay (1000);
 
 
-    //  beep_PowerOn();
-    // delay(2000);
-    // beep_PowerOff();
-    //  delay(2000);
-    // delay(2000);
-    //  beep_Click();
-    // delay(2000);
-    //  beep_OK();
-    // delay(2000);
-
-
-    // PWR_EnterSTANDBYMode(PWR_STANDBYEntry_WFE);
-
-   // gotoDeepSleep();
+    gotoDeepSleep();
 
     while (1) {
         // Delay_Ms(1000);
@@ -227,10 +225,14 @@ int main (void) {
             printf ("Press\n");
             LED_ON;
         }
-        if (b.click())
+        if (b.click()){
             printf ("Click\n");
-        if (b.hold())
+            buzzer_ios_click();
+        }
+        if (b.hold()){
             printf ("Hold\n");
+            buzzer_warning();
+        }
         if (b.releaseHold()) {
             printf ("ReleaseHold\n");
         }
@@ -253,7 +255,8 @@ int main (void) {
         }
         if (b.timeout()) {
             printf ("Timeout\n");
-           // gotoDeepSleep();
+            buzzer_robot();
+            gotoDeepSleep();
         }
         // printf ("Run in main\r\n");
         //  printf (BOLD FG (226) "ZEPHYR + RTT 256\r\n" RESET);
@@ -325,63 +328,59 @@ void gotoDeepSleep (void) {
  *
  * @return  none
  */
-void TIM1_PWMOut_CH2N_Init(uint16_t arr, uint16_t psc, uint16_t ccp)
-{
+void TIM1_PWMOut_CH2N_Init (uint16_t arr, uint16_t psc, uint16_t ccp) {
     GPIO_InitTypeDef GPIO_InitStructure = {0};
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure = {0};
     TIM_OCInitTypeDef TIM_OCInitStructure = {0};
 
     /* 1) §´§Ñ§Ü§ä§Ú§â§à§Ó§Ñ§ß§Ú§Ö: GPIOA, AFIO §Ú TIM1 (TIM1 §ß§Ñ APB2 §å CH32V003) */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO | RCC_APB2Periph_TIM1, ENABLE);
+    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO | RCC_APB2Periph_TIM1, ENABLE);
 
     /* 2) §¯§Ñ§ã§ä§â§à§Û§Ü§Ñ §á§Ú§ß§Ñ PA2 §Ü§Ñ§Ü AF Push-Pull */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;         // PA2 -> TIM1_CH2N
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;   // Alternate Function Push-Pull
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;        // PA2 -> TIM1_CH2N
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;  // Alternate Function Push-Pull
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_30MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init (GPIOA, &GPIO_InitStructure);
+
 
     /* 3) §¢§Ñ§Ù§à§Ó§Ñ§ñ §ß§Ñ§ã§ä§â§à§Û§Ü§Ñ §ä§Ñ§Û§Þ§Ö§â§Ñ */
     TIM_TimeBaseInitStructure.TIM_Period = arr;
     TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInit(TIM1, &TIM_TimeBaseInitStructure);
+    TIM_TimeBaseInit (TIM1, &TIM_TimeBaseInitStructure);
 
     /* 4) §¬§Ñ§ß§Ñ§Ý 2 (OC2), PWM §â§Ö§Ø§Ú§Þ */
     TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;       // §à§ã§ß§à§Ó§ß§à§Û §Ó§í§ç§à§Õ (OC2)
-    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;     // N-§Ó§í§ç§à§Õ (OC2N) ¡ª §Ó§Ñ§Ø§ß§à
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;    // §à§ã§ß§à§Ó§ß§à§Û §Ó§í§ç§à§Õ (OC2)
+    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;  // N-§Ó§í§ç§à§Õ (OC2N) ¡ª §Ó§Ñ§Ø§ß§à
     TIM_OCInitStructure.TIM_Pulse = ccp;
     TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
     TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
-    TIM_OC2Init(TIM1, &TIM_OCInitStructure);
+    TIM_OC2Init (TIM1, &TIM_OCInitStructure);
 
     /* 5) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §á§â§Ö§Õ§Ù§Ñ§Ô§â§å§Ù§Ü§å §Õ§Ý§ñ CCR §Ú ARR */
-    TIM_OC2PreloadConfig(TIM1, TIM_OCPreload_Enable);
-    TIM_ARRPreloadConfig(TIM1, ENABLE);
+    TIM_OC2PreloadConfig (TIM1, TIM_OCPreload_Enable);
+    TIM_ARRPreloadConfig (TIM1, ENABLE);
 
     /* 6) §Á§Ó§ß§à §Ù§Ñ§á§Ú§ã§í§Ó§Ñ§Ö§Þ CCR2 (§ß§Ñ §Ó§ã§ñ§Ü§Ú§Û §ã§Ý§å§é§Ñ§Û) */
-    TIM_SetCompare2(TIM1, ccp);
+    TIM_SetCompare2 (TIM1, ccp);
 
     /* 7) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §Ô§Ý§Ñ§Ó§ß§í§Û §Ó§í§ç§à§Õ (MOE) ¡ª §à§Ò§ñ§Ù§Ñ§ä§Ö§Ý§î§ß§à §Õ§Ý§ñ TIM1 complementary outputs */
-    TIM_CtrlPWMOutputs(TIM1, ENABLE);
+    TIM_CtrlPWMOutputs (TIM1, ENABLE);
 
     /* 8) §£§Ü§Ý§ð§é§Ñ§Ö§Þ §ä§Ñ§Û§Þ§Ö§â */
-    TIM_Cmd(TIM1, ENABLE);
+    TIM_Cmd (TIM1, ENABLE);
 }
 
-
-void PWM_SetDuty(uint16_t duty)
-{
-    TIM_SetCompare2(TIM1, duty);
+void PWM_SetDuty (uint16_t duty) {
+    TIM_SetCompare2 (TIM1, duty);
 }
 
-void PWM_Enable()
-{
-    TIM_Cmd(TIM1, ENABLE);
+void PWM_Enable() {
+    TIM_Cmd (TIM1, ENABLE);
 }
 
-void PWM_Disable()
-{
-    TIM_Cmd(TIM1, DISABLE);  // §ä§Ñ§Û§Þ§Ö§â §à§ã§ä§Ñ§ß§à§Ó§Ý§Ö§ß
+void PWM_Disable() {
+    TIM_Cmd (TIM1, DISABLE);  // §ä§Ñ§Û§Þ§Ö§â §à§ã§ä§Ñ§ß§à§Ó§Ý§Ö§ß
 }

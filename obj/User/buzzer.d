@@ -1,4 +1,5 @@
-User/buzzer.o: ../User/buzzer.c ../User/buzzer_tunes.h ../User/debug.h \
+User/buzzer.o: ../User/buzzer.c ../User/buzzer_tunes.h \
+ f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/SRC/Core/core_riscv.h \
  f:/CH32V003_MotorControl/User/system_ch32v00x.h \
@@ -11,7 +12,6 @@ User/buzzer.o: ../User/buzzer.c ../User/buzzer_tunes.h ../User/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_gpio.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h \
  f:/CH32V003_MotorControl/User/ch32v00x_it.h \
- f:/CH32V003_MotorControl/User/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_misc.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_pwr.h \
@@ -25,7 +25,7 @@ User/buzzer.o: ../User/buzzer.c ../User/buzzer_tunes.h ../User/debug.h \
 
 ../User/buzzer_tunes.h:
 
-../User/debug.h:
+f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
 
@@ -50,8 +50,6 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_gpio.h:
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h:
 
 f:/CH32V003_MotorControl/User/ch32v00x_it.h:
-
-f:/CH32V003_MotorControl/User/debug.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h:
 

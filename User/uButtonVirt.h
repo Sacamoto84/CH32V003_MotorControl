@@ -2,7 +2,7 @@
 
 #ifdef __cplusplus
 
-extern uint32_t millisec;
+extern uint64_t millisec;
 
 //#include "define.h"
 

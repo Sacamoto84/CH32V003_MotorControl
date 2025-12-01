@@ -16,47 +16,68 @@
 #define BUZZER_OFF GPIO_WriteBit(GPIOC, GPIO_Pin_1, Bit_RESET)
 #endif
 
-// === §³§ª§³§´§¦§®§¯§½§¦ §©§£§µ§¬§ª ===
-extern void beep_PowerOn(void);
-extern void beep_PowerOff(void);
-extern void beep_Click(void);
-extern void beep_OK(void);
-extern void beep_Error(void);
-extern void beep_Warning(void);
-extern void beep_Success(void);
+extern void melody_Nokia(void);
+extern void melody_iPhoneMarimba(void);
+extern void melody_SamsungWhistle(void);
 
-// === §µ§£§¦§¥§°§®§­§¦§¯§ª§Á ===
-extern void beep_Message(void);
-extern void beep_TripleBeep(void);
-extern void beep_MorseA(void);
-extern void beep_SOS_Short(void);
+// §ª§Ô§â§í
+extern void melody_SuperMario(void);
+extern void melody_Tetris(void);
+extern void melody_StarWars(void);
+extern void melody_ImperialMarch(void);
+extern void melody_ZeldaSecret(void);
+extern void melody_Pacman(void);
 
-// === §³§ª§²§¦§¯§½ §ª §´§²§¦§£§°§¤§ª ===
-extern void beep_Alarm(void);
-extern void beep_Pulse(void);
-extern void beep_FastPulse(void);
-extern void beep_Siren(void);
-extern void beep_Reverse(void);
+// §±§â§Ñ§Ù§Õ§ß§Ú§é§ß§í§Ö
+extern void melody_HappyBirthday(void);
+extern void melody_JingleBells(void);
+extern void melody_MerryChristmas(void);
 
-// === §ª§¤§²§°§£§½§¦ §©§£§µ§¬§ª ===
-extern void beep_LevelUp(void);
-extern void beep_PowerUp(void);
-extern void beep_GameOver(void);
-extern void beep_Coin(void);
-extern void beep_Hit(void);
+// §±§à§á§å§Ý§ñ§â§ß§í§Ö
+extern void melody_PinkPanther(void);
+extern void melody_MissionImpossible(void);
+extern void melody_TakeOnMe(void);
+extern void melody_FurElise(void);
 
-// === §´§¦§­§¦§¶§°§¯§¯§½§¦ §³§ª§¤§¯§¡§­§½ ===
-extern void beep_IncomingCall(void);
-extern void beep_Busy(void);
-extern void beep_Waiting(void);
+// §¬§Ý§Ñ§ã§ã§Ú§Ü§Ñ
+extern void melody_CanonInD(void);
+extern void melody_OdeToJoy(void);
 
-// === §³§±§¦§¸§ª§¡§­§¾§¯§½§¦ §±§¡§´§´§¦§²§¯§½ ===
-extern void beep_SOS(void);
-extern void beep_LowBattery(void);
-extern void beep_Countdown(void);
-extern void beep_Rhythm(void);
-extern void beep_Trill(void);
-extern void beep_Chirp(void);
+
+
+
+// --- §³§­§µ§¨§¦§¢§¯§½§¦ §©§£§µ§¬§ª ---
+extern void buzzer_ok(void);
+extern void buzzer_ok2(void);
+extern void buzzer_error(void);
+extern void buzzer_error_strong(void);
+extern void buzzer_warning(void);
+extern void buzzer_warning_double(void);
+extern void buzzer_click(void);
+extern void buzzer_success_long(void);
+extern void buzzer_critical(void);
+extern void buzzer_beepboop(void);
+extern void buzzer_access_denied(void);
+extern void buzzer_notify(void);
+
+// §¥§à§á§à§Ý§ß§Ú§ä§Ö§Ý§î§ß§í§Ö §ã§ä§Ú§Ý§Ú§Ù§à§Ó§Ñ§ß§ß§í§Ö:
+extern void buzzer_ios_click(void);
+extern void buzzer_android_notify(void);
+extern void buzzer_robot(void);
+extern void buzzer_microwave_done(void);
+extern void buzzer_winxp_msg(void);
+
+
+// --- §¥§°§¢§¡§£§­§¦§¯§¯§½§¦ ---
+extern void buzzer_startup(void);
+extern void buzzer_shutdown(void);
+extern void buzzer_charging(void);
+extern void buzzer_button_hold(void);
+
+
+
+
+
 
 #ifdef __cplusplus
 }

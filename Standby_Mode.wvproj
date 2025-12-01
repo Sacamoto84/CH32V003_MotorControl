@@ -77,7 +77,7 @@
 					"${project}/SRC"
 				],
 				"optimization": {
-					"level": "none",
+					"level": "size",
 					"message_length": true,
 					"char_is_signed": true,
 					"function_sections": true,
@@ -350,11 +350,11 @@
 		]
 	},
 	"flashConfig": {
-		"mcutype": "CH32V00x",
+		"mcutype": "CH32V003",
 		"address": "0x08000000",
 		"target_path": "obj\\Standby_Mode.hex",
-		"clkSpeed": "Middle",
-		"debug_interface_mode": "1-wire serial",
+		"clkSpeed": "High",
+		"debug_interface_mode": "",
 		"erase": true,
 		"program": true,
 		"verify": true,

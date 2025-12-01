@@ -70,7 +70,7 @@ main-build: Standby_Mode.elf secondary-outputs
 
 # Tool invocations
 Standby_Mode.elf: $(OBJS) $(USER_OBJS_ESCAPE)
-	@	riscv-none-embed-g++ -march=rv32ecxw -mabi=ilp32e -msmall-data-limit=0 -msave-restore -fmax-errors=20 -O0 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "f:/CH32V003_MotorControl/SRC/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"Standby_Mode.map" --specs=nano.specs --specs=nosys.specs -o "Standby_Mode.elf" $(OBJS) $(LIBS) -lprintf
+	@	riscv-none-embed-g++ -march=rv32ecxw -mabi=ilp32e -msmall-data-limit=0 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "f:/CH32V003_MotorControl/SRC/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"Standby_Mode.map" --specs=nano.specs --specs=nosys.specs -o "Standby_Mode.elf" $(OBJS) $(LIBS) -lprintf
 Standby_Mode.hex: Standby_Mode.elf
 	@	riscv-none-embed-objcopy -O ihex "Standby_Mode.elf" "Standby_Mode.hex"
 Standby_Mode.lst: Standby_Mode.elf

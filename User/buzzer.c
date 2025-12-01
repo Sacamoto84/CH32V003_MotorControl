@@ -42,8 +42,137 @@ void tone1(uint16_t frequency, uint16_t duration_ms) {
     }
 }
 
-// §±§Ñ§å§Ù§Ñ (silence)
-void silence(uint16_t duration_ms) {
-    BUZZER_OFF;
-    delay(duration_ms);
+// ------------------------
+//   §³§­§µ§¨§¦§¢§¯§½§¦ §©§£§µ§¬§ª
+// ------------------------
+
+void buzzer_ok(void) {
+    tone1(1000, 80);
+    tone1(1500, 80);
+}
+
+
+void buzzer_error(void) {
+    tone1(400, 150);
+    tone1(200, 200);
+}
+
+void buzzer_error_strong(void) {
+    tone1(300, 200);
+    tone1(0, 50);
+    tone1(300, 200);
+}
+
+void buzzer_warning(void) {
+    tone1(800, 150);
+}
+
+void buzzer_warning_double(void) {
+    tone1(800, 120);
+    tone1(0, 60);
+    tone1(800, 120);
+}
+
+void buzzer_click(void) {
+    tone1(1200, 40);
+}
+
+void buzzer_success_long(void) {
+    tone1(800, 150);
+    tone1(1000, 150);
+    tone1(1200, 200);
+}
+
+void buzzer_critical(void) {
+    for (int i = 0; i < 3; i++) {
+        tone1(250, 200);
+        tone1(0, 80);
+    }
+}
+
+void buzzer_beepboop(void) {
+    tone1(1000, 60);
+    tone1(700, 60);
+}
+
+void buzzer_access_denied(void) {
+    tone1(600, 70);
+    tone1(400, 120);
+}
+
+void buzzer_notify(void) {
+    tone1(1000, 100);
+    tone1(800, 150);
+}
+
+// ------------------------
+//   §³§´§ª§­§ª§©§°§£§¡§¯§¯§½§¦ §©§£§µ§¬§ª
+// ------------------------
+
+void buzzer_ios_click(void) {
+    tone1(1800, 25);
+}
+
+void buzzer_android_notify(void) {
+    tone1(1200, 70);
+    tone1(1500, 120);
+}
+
+void buzzer_robot(void) {
+    tone1(800, 70);
+    tone1(1000, 70);
+    tone1(600, 90);
+}
+
+void buzzer_microwave_done(void) {
+    tone1(1000, 200);
+    tone1(0, 100);
+    tone1(1000, 200);
+}
+
+void buzzer_winxp_msg(void) {
+    tone1(900, 80);
+    tone1(1200, 80);
+    tone1(1000, 120);
+}
+
+
+// ------------------------
+//     STARTUP
+// ------------------------
+// §®§ñ§Ô§Ü§Ñ§ñ §Ó§à§ã§ç§à§Õ§ñ§ë§Ñ§ñ §Þ§Ö§Ý§à§Õ§Ú§ñ, §Ü§Ñ§Ü §Ó§Ü§Ý§ð§é§Ö§ß§Ú§Ö §å§ã§ä§â§à§Û§ã§ä§Ó§Ñ
+void buzzer_startup(void) {
+    tone1(800, 120);
+    tone1(1000, 120);
+    tone1(1300, 160);
+}
+
+// ------------------------
+//     SHUTDOWN
+// ------------------------
+// §°§Ò§â§Ñ§ä§ß§Ñ§ñ, §ß§Ú§ã§ç§à§Õ§ñ§ë§Ñ§ñ
+void buzzer_shutdown(void) {
+    tone1(1200, 150);
+    tone1(900, 150);
+    tone1(600, 180);
+}
+
+// ------------------------
+//     CHARGING
+// ------------------------
+// §©§Ó§å§Ü "§á§Ú§ß§Ô", §Ü§Ñ§Ü §á§à§Õ§Ü§Ý§ð§é§Ö§ß§Ú§Ö §á§Ú§ä§Ñ§ß§Ú§ñ
+void buzzer_charging(void) {
+    tone1(1500, 80);
+    tone1(1800, 150);
+}
+
+// ------------------------
+//     BUTTON HOLD
+// ------------------------
+// §¯§Ñ§â§Ñ§ã§ä§Ñ§ð§ë§Ú§Û "§Õ§å§Õ§å-§Õ§å§Õ§å" §á§â§Ú §å§Õ§Ö§â§Ø§Ñ§ß§Ú§Ú §Ü§ß§à§á§Ü§Ú
+void buzzer_button_hold(void) {
+    for (int i = 0; i < 2; i++) {
+        tone1(700, 80);
+        tone1(900, 80);
+    }
 }

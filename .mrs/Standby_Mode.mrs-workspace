@@ -22,6 +22,7 @@
 			"*.cc": "cpp",
 			"*.hh": "cpp",
 			"*.h++": "cpp"
-		}
+		},
+		"files.encoding": "utf8"
 	}
 }
