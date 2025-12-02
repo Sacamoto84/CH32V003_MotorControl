@@ -33,7 +33,7 @@ class Pwm {
     void init (uint16_t _arr, uint16_t psc, uint16_t _ccp) {
 
 
-        if (_arr = 0)
+        if (_arr == 0)
             _arr = 1;
         arr = _arr;
 

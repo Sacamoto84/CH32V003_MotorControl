@@ -5,7 +5,7 @@ void delay (int time) {
     SysTick->SR &= ~(1 << 0);
     SysTick->CMP = 1000 - 1;
     SysTick->CNT = 0;
-    SysTick->CTLR = 0xB;
+    SysTick->CTLR = 0xb;
 
     volatile uint64_t now = millisec;
     volatile uint64_t stop = now + (uint64_t)time;

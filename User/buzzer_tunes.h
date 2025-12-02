@@ -79,6 +79,13 @@ extern void buzzer_button_hold(void);
 
 
 
+
+
+
+
+extern void tone1_vol(uint16_t frequency, uint16_t duration_ms, uint8_t volume);
+
+
 #ifdef __cplusplus
 }
 #endif

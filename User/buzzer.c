@@ -42,6 +42,58 @@ void tone1(uint16_t frequency, uint16_t duration_ms) {
     }
 }
 
+
+
+
+// §¤§Ö§ß§Ö§â§Ñ§è§Ú§ñ §ä§à§ß§Ñ §ã §Ô§â§à§Þ§Ü§à§ã§ä§î§ð (0-100%)
+void tone1_vol(uint16_t frequency, uint16_t duration_ms, uint8_t volume) {
+    if(frequency == 0 || volume == 0) {
+        BUZZER_OFF;
+        delay(duration_ms);
+        return;
+    }
+    
+    // §°§Ô§â§Ñ§ß§Ú§é§Ú§ä§î §Ô§â§à§Þ§Ü§à§ã§ä§î 0-100%
+    if(volume > 100) volume = 100;
+    
+    uint32_t period_us = 1000000UL / frequency;
+    uint32_t half_period_us = period_us / 2;
+    uint32_t cycles = (uint32_t)duration_ms * 1000UL / period_us;
+    
+    // §£§â§Ö§Þ§ñ ON §Ó §á§â§à§è§Ö§ß§ä§Ñ§ç §à§ä §á§à§Ý§å§á§Ö§â§Ú§à§Õ§Ñ (duty cycle)
+    uint32_t on_time_us = (half_period_us * volume) / 100;
+    uint32_t off_time_us = half_period_us - on_time_us;
+    
+    for(uint32_t i = 0; i < cycles; i++) {
+        // §±§à§Ý§à§Ø§Ú§ä§Ö§Ý§î§ß§Ñ§ñ §á§à§Ý§å§Ó§à§Ý§ß§Ñ
+        BUZZER_ON;
+        delayUsTone(on_time_us);
+        BUZZER_OFF;
+        delayUsTone(off_time_us);
+        
+        // §°§ä§â§Ú§è§Ñ§ä§Ö§Ý§î§ß§Ñ§ñ §á§à§Ý§å§Ó§à§Ý§ß§Ñ (§á§Ñ§å§Ù§Ñ)
+        delayUsTone(half_period_us);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ------------------------
 //   §³§­§µ§¨§¦§¢§¯§½§¦ §©§£§µ§¬§ª
 // ------------------------
@@ -176,3 +228,4 @@ void buzzer_button_hold(void) {
         tone1(900, 80);
     }
 }
+

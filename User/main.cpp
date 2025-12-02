@@ -19,11 +19,13 @@ void ScreenNormal (void);
 void ScreenBoostEnable (void);
 
 enum class Screen {
-    NORMAL,
-    BUSY,
-    SET_POWER,
-    SET_BOOST_ENABLE,
-    SET_BOOST_POWER,
+    NORMAL,            // 0
+    BUSY,              // 1
+    SET_POWER,         // 2
+    SET_BOOST_ENABLE,  // 3
+    SET_BOOST_TIME,    // 4
+    SET_BOOST_POWER,   // 5
+    RESET,             // 6
 };
 
 
@@ -31,6 +33,9 @@ Screen screen = {Screen::NORMAL};
 uint16_t configBoostEnable = 0;    // Настройка того что будет использоваться буст
 uint16_t configBoostTime = 100;    // Время буста в ms
 uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
+
+uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
+
 
 /* Global define */
 // Удобные макросы (можно положить в отдельный .h)
@@ -189,14 +194,28 @@ int main (void) {
     SysTick->SR &= ~(1 << 0);
     SysTick->CMP = 1000 - 1;
     SysTick->CNT = 0;
-    SysTick->CTLR = 0xB;
+    SysTick->CTLR = 0xb;
 
-    // pwm.init (100, 9, 50);
+    pwm.init (100, 9, 50);
 
-    tone1 (1000, 100);
-    tone1 (1500, 150);
+    // tone1 (1000, 100);
+    // tone1 (1500, 150);
 
-    // delay (1000);
+    // Восходящая гамма с crescendo
+    tone1_vol (523, 80, 40);     // C5 - тихо
+    tone1_vol (659, 80, 60);     // E5 - средне
+    tone1_vol (784, 100, 80);    // G5 - громче
+    tone1_vol (1047, 150, 100);  // C6 - ГРОМКО!
+
+    delay (1000);
+
+    // Восходящий паттерн с crescendo
+    tone1_vol (800, 60, 50);     // Тихий старт
+    delay (30);
+    tone1_vol (1000, 60, 70);    // Нарастание
+    delay (30);
+    tone1_vol (1200, 150, 100);  // Яркий финал
+
     //  --- СЛУЖЕБНЫЕ ЗВУКИ ---
     //  buzzer_ok();
     //   delay (1000);
@@ -268,6 +287,14 @@ int main (void) {
 
         if (screen == Screen::NORMAL) {
             ScreenNormal();
+
+            if (comandMotorOn) {
+                pwm.enable();
+                LED_ON;
+            } else {
+                pwm.disable();
+                LED_OFF;
+            }
         }
 
         if (screen == Screen::SET_POWER) {
@@ -276,29 +303,38 @@ int main (void) {
 
         if (screen == Screen::SET_BOOST_POWER) {
             ScreenBoostPower();
+            comandMotorOn = 0;
         }
 
         if (screen == Screen::SET_BOOST_ENABLE) {
             ScreenBoostEnable();
+            comandMotorOn = 0;
         }
     }
 }
 
 void ScreenNormal (void) {
 
-    if (b.press()) {
-        printf ("Press\n");
-        LED_ON;
-    }
+    static int step = 0;
+    // if (b.press()) {
+    //     printf ("Press\n");
+    //     LED_ON;
+    // }
 
     if (b.click()) {
         printf ("Click\n");
         buzzer_ios_click();
+
+        if (comandMotorOn)
+            comandMotorOn = 0;
+        else
+            comandMotorOn = 1;
     }
 
     if (b.hold()) {
         printf ("Hold\n");
         buzzer_warning();
+        step = -1;
     }
 
     if (b.releaseHold()) {
@@ -306,14 +342,35 @@ void ScreenNormal (void) {
     }
 
     if (b.step()) {
-        printf ("Step\n");
-
-        tone1 (400, 100);
+        step++;
+        printf ("Step %d\n", step);
+        buzzer_ios_click();
     }
 
 
-    if (b.releaseStep())
+    if (b.releaseStep()) {
         printf ("releaseStep\n");
+
+        if (step == 3) {
+            screen = Screen::SET_BOOST_ENABLE;
+            delay (1000);
+            LED_ON;
+            buzzer_ios_click();
+            LED_OFF;
+            delay (200);
+            LED_ON;
+            buzzer_ios_click();
+            LED_OFF;
+            delay (200);
+            LED_ON;
+            buzzer_ios_click();
+            LED_OFF;
+            delay (200);
+            LED_ON;
+            buzzer_ios_click();
+            LED_OFF;
+        }
+    }
 
     if (b.release()) {
         printf ("Release\n");
@@ -323,38 +380,37 @@ void ScreenNormal (void) {
     if (b.hasClicks()) {
         printf ("Clicks: %d\n", b.getClicks());
 
+        // if (b.getClicks() == 2) {
+        //     // SET_POWER
+        //     // screen = Screen::SET_POWER;
 
-        if (b.getClicks() == 2) {
-            // SET_POWER
-            //screen = Screen::SET_POWER;
+        //  buzzer_ios_click();
+        //  delay (200);
+        //  buzzer_ios_click();
+        // }
 
-            buzzer_ios_click();
-            delay (200);
-            buzzer_ios_click();
-        }
+        // if (b.getClicks() == 3) {
+        //     // SET_POWER
+        //     // screen = Screen::SET_POWER;
 
-        if (b.getClicks() == 3) {
-            // SET_POWER
-            //screen = Screen::SET_POWER;
-            
-            buzzer_ios_click();
-            delay (200);
-            buzzer_ios_click();
-            delay (200);
-            buzzer_ios_click();
-        }
+        //  buzzer_ios_click();
+        //  delay (200);
+        //  buzzer_ios_click();
+        //  delay (200);
+        //  buzzer_ios_click();
+        // }
 
-        if (b.getClicks() == 4) {
-            // SET_POWER
-            screen = Screen::SET_BOOST_ENABLE;
-            buzzer_ios_click();
-            delay (200);
-            buzzer_ios_click();
-            delay (200);
-            buzzer_ios_click();
-            delay (200);
-            buzzer_ios_click();
-        }
+        // if (b.getClicks() == 4) {
+        //     // SET_POWER
+        //     screen = Screen::SET_BOOST_ENABLE;
+        //     buzzer_ios_click();
+        //     delay (200);
+        //     buzzer_ios_click();
+        //     delay (200);
+        //     buzzer_ios_click();
+        //     delay (200);
+        //     buzzer_ios_click();
+        // }
 
 
         if (b.getClicks() == 5) {
@@ -385,50 +441,30 @@ void ScreenBoostPower (void) {
 }
 
 void ScreenBoostEnable (void) {
+
     if (configBoostEnable)
         LED_ON;
 
     else
         LED_OFF;
 
-
-    // if (b.click()) {
-        
-
-    //     if (configBoostEnable)
-    //         configBoostEnable = 0;
-    //     else
-    //         configBoostEnable = 1;
-
-    //     printf ("ScreenBoostEnable Click %d\n", configBoostEnable);
-    
-    //     buzzer_ios_click();
-    // }
-
-
     if (b.hasClicks()) {
         printf ("Clicks: %d\n", b.getClicks());
 
-     if (b.getClicks() == 1) {
-         if (configBoostEnable)
-             configBoostEnable = 0;
-         else
-             configBoostEnable = 1;
-         buzzer_ok();
-     }
-       if (b.getClicks() == 2) {
-        screen = Screen::NORMAL;
-        buzzer_shutdown();
-        b.reset();
-        LED_OFF;
-     }
+        if (b.getClicks() == 1) {
+            if (configBoostEnable)
+                configBoostEnable = 0;
+            else
+                configBoostEnable = 1;
+            buzzer_ok();
+        }
+        if (b.getClicks() == 2) {
+            screen = Screen::NORMAL;
+            buzzer_shutdown();
+            b.reset();
+            LED_OFF;
+        }
     }
-
-    // if (b.hold()) {
-    //     screen = Screen::NORMAL;
-    //     buzzer_shutdown();
-    //     b.reset();
-    // }
 }
 
 void gotoDeepSleep (void) {

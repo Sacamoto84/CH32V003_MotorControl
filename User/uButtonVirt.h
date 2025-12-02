@@ -11,11 +11,11 @@ extern uint64_t millisec;
 #endif
 
 #ifndef UB_HOLD_TIME
-#define UB_HOLD_TIME 1000  // время до перехода в состояние "удержание"
+#define UB_HOLD_TIME 2000  // время до перехода в состояние "удержание"
 #endif
 
 #ifndef UB_STEP_TIME
-#define UB_STEP_TIME 400  // время до перехода в состояние "импульсное удержание"
+#define UB_STEP_TIME 1000  // время до перехода в состояние "импульсное удержание"
 #endif
 
 #ifndef UB_STEP_PRD
