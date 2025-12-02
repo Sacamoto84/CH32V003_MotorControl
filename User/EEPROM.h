@@ -11,6 +11,8 @@
 #ifndef EEPROM_H
 #define EEPROM_H
 
+#include "debug.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -18,8 +20,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "debug.h"
 
 //#include "gpios.h"  // Include GPIO library for integration
 

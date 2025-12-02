@@ -4,7 +4,6 @@
 
 #include "uButtonVirt.h"
 
-// Для использования gpio_dt_spec нужно включить Zephyr заголовок
 extern "C" {
    
 }

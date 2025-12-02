@@ -1,13 +1,25 @@
+
+//
+//  TX  [PD6   PD4] SWIO
+//  GNG [VSS   PC4] KEY
+//  PWM [PA2   PC2] LED
+//  VDD [VDD   PC1] BUZZER
+//
+// ┌────────┬──────────┬──────────┬─────────────────┐
+// │ Сигнал │ Вывод 1  │ Вывод 2  │ Описание        │
+// ├────────┼──────────┼──────────┼─────────────────┤
+// │ TX     │ PD6      │ PD4      │ SWIO            │
+// │ GND    │ VSS      │ PC4      │ KEY (кнопка)    │
+// │ PWM    │ PA2      │ PC2      │ LED             │
+// │ VDD    │ VDD      │ PC1      │ Buzzer (зуммер) │
+// └────────┴──────────┴──────────┴─────────────────┘
+//
+
 #include <debug.h>
-
-#include "buzzer_tunes.h"
-
 #include "uButton.h"
-
 #include "EEPROM.h"
 
 uButton b;
-
 Pwm pwm;
 
 extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
@@ -16,26 +28,14 @@ void TIM1_PWMOut_CH2N_Init (u16 arr, u16 psc, u16 ccp);
 
 void ScreenBoostPower (void);
 void ScreenNormal (void);
-void ScreenBoostEnable (void);
-
-enum class Screen {
-    NORMAL,            // 0
-    BUSY,              // 1
-    SET_POWER,         // 2
-    SET_BOOST_ENABLE,  // 3
-    SET_BOOST_TIME,    // 4
-    SET_BOOST_POWER,   // 5
-    RESET,             // 6
-};
-
 
 Screen screen = {Screen::NORMAL};
+
 uint16_t configBoostEnable = 0;    // Настройка того что будет использоваться буст
 uint16_t configBoostTime = 100;    // Время буста в ms
 uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
 
 uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
-
 
 /* Global define */
 // Удобные макросы (можно положить в отдельный .h)
@@ -47,7 +47,6 @@ uint16_t comandMotorOn = 0;        // Признак того что мотор 
 #define UNDERLINE "\033[4m"
 
 void EXTI_INT_INIT (void) {
-
     // EXTI_InitTypeDef EXTI_InitStructure = {0};
     //  RCC_APB2PeriphClockCmd (RCC_APB2Periph_AFIO, ENABLE);
     //  EXTI_InitStructure.EXTI_Line = EXTI_Line9;
@@ -116,53 +115,9 @@ int main (void) {
     // Разблокируем нормальный двухпроводный отладочный интерфейс навсегда
     // (записывается в опции-байты при первой прошивке)
 
-
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
-
-    NVIC_PriorityGroupConfig (NVIC_PriorityGroup_1);
-    SystemCoreClockUpdate();
-    Delay_Init();
-    Delay_Ms (500);
-
-    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
-    RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-
-    GPIO_Init (GPIOA, &GPIO_InitStructure);
-
-    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 |  GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All & ~GPIO_Pin_4;
-    // GPIO_Init (GPIOD, &GPIO_InitStructure);
-
-    GPIO_Init (GPIOC, &GPIO_InitStructure);
-
-    // LED
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-    GPIO_Init (GPIOC, &GPIO_InitStructure);
-
-    // BUZZER
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-    GPIO_Init (GPIOC, &GPIO_InitStructure);
-
-    // KEY
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-    GPIO_Init (GPIOC, &GPIO_InitStructure);
-
-
-    // BUZZER_ON;
-    LED_ON;
-    Delay_Ms (5);
-    LED_OFF;
+    init();
 
     EXTI_INT_INIT();
-
 
     USART_Printf_Init (115200);
     printf ("\r\n---------------------------------------\n");
@@ -198,23 +153,29 @@ int main (void) {
 
     pwm.init (100, 9, 50);
 
+    tone1_vol(CONS_K, 60, 80);    // г (как к)
+    tone1_vol(VOWEL_O, 150, 90);  // о
+    tone1_vol(CONS_T, 50, 80);    // т
+    tone1_vol(VOWEL_O, 180, 100); // о (ударный)
+    tone1_vol(CONS_V, 80, 75);    // в
+
     // tone1 (1000, 100);
     // tone1 (1500, 150);
 
-    // Восходящая гамма с crescendo
-    tone1_vol (523, 80, 40);     // C5 - тихо
-    tone1_vol (659, 80, 60);     // E5 - средне
-    tone1_vol (784, 100, 80);    // G5 - громче
-    tone1_vol (1047, 150, 100);  // C6 - ГРОМКО!
+    // // Восходящая гамма с crescendo
+    // tone1_vol (523, 80, 40);     // C5 - тихо
+    // tone1_vol (659, 80, 60);     // E5 - средне
+    // tone1_vol (784, 100, 80);    // G5 - громче
+    // tone1_vol (1047, 150, 100);  // C6 - ГРОМКО!
 
-    delay (1000);
+    // delay (1000);
 
-    // Восходящий паттерн с crescendo
-    tone1_vol (800, 60, 50);     // Тихий старт
-    delay (30);
-    tone1_vol (1000, 60, 70);    // Нарастание
-    delay (30);
-    tone1_vol (1200, 150, 100);  // Яркий финал
+    // // Восходящий паттерн с crescendo
+    // tone1_vol (800, 60, 50);     // Тихий старт
+    // delay (30);
+    // tone1_vol (1000, 60, 70);    // Нарастание
+    // delay (30);
+    // tone1_vol (1200, 150, 100);  // Яркий финал
 
     //  --- СЛУЖЕБНЫЕ ЗВУКИ ---
     //  buzzer_ok();
@@ -282,7 +243,6 @@ int main (void) {
 
         // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
 
-
         b.tick();
 
         if (screen == Screen::NORMAL) {
@@ -313,124 +273,6 @@ int main (void) {
     }
 }
 
-void ScreenNormal (void) {
-
-    static int step = 0;
-    // if (b.press()) {
-    //     printf ("Press\n");
-    //     LED_ON;
-    // }
-
-    if (b.click()) {
-        printf ("Click\n");
-        buzzer_ios_click();
-
-        if (comandMotorOn)
-            comandMotorOn = 0;
-        else
-            comandMotorOn = 1;
-    }
-
-    if (b.hold()) {
-        printf ("Hold\n");
-        buzzer_warning();
-        step = -1;
-    }
-
-    if (b.releaseHold()) {
-        printf ("ReleaseHold\n");
-    }
-
-    if (b.step()) {
-        step++;
-        printf ("Step %d\n", step);
-        buzzer_ios_click();
-    }
-
-
-    if (b.releaseStep()) {
-        printf ("releaseStep\n");
-
-        if (step == 3) {
-            screen = Screen::SET_BOOST_ENABLE;
-            delay (1000);
-            LED_ON;
-            buzzer_ios_click();
-            LED_OFF;
-            delay (200);
-            LED_ON;
-            buzzer_ios_click();
-            LED_OFF;
-            delay (200);
-            LED_ON;
-            buzzer_ios_click();
-            LED_OFF;
-            delay (200);
-            LED_ON;
-            buzzer_ios_click();
-            LED_OFF;
-        }
-    }
-
-    if (b.release()) {
-        printf ("Release\n");
-        LED_OFF;
-    }
-
-    if (b.hasClicks()) {
-        printf ("Clicks: %d\n", b.getClicks());
-
-        // if (b.getClicks() == 2) {
-        //     // SET_POWER
-        //     // screen = Screen::SET_POWER;
-
-        //  buzzer_ios_click();
-        //  delay (200);
-        //  buzzer_ios_click();
-        // }
-
-        // if (b.getClicks() == 3) {
-        //     // SET_POWER
-        //     // screen = Screen::SET_POWER;
-
-        //  buzzer_ios_click();
-        //  delay (200);
-        //  buzzer_ios_click();
-        //  delay (200);
-        //  buzzer_ios_click();
-        // }
-
-        // if (b.getClicks() == 4) {
-        //     // SET_POWER
-        //     screen = Screen::SET_BOOST_ENABLE;
-        //     buzzer_ios_click();
-        //     delay (200);
-        //     buzzer_ios_click();
-        //     delay (200);
-        //     buzzer_ios_click();
-        //     delay (200);
-        //     buzzer_ios_click();
-        // }
-
-
-        if (b.getClicks() == 5) {
-            buzzer_shutdown();
-            buzzer_shutdown();
-            buzzer_shutdown();
-            buzzer_shutdown();
-
-            __disable_irq();  // отключаем все прерывания
-            NVIC_SystemReset();
-            while (1);
-        }
-    }
-
-    if (b.timeout()) {
-        printf ("Timeout\n");
-        buzzer_robot();
-        // gotoDeepSleep();
-    }
-}
 
 void ScreenBoostPower (void) {
 
@@ -440,32 +282,6 @@ void ScreenBoostPower (void) {
     }
 }
 
-void ScreenBoostEnable (void) {
-
-    if (configBoostEnable)
-        LED_ON;
-
-    else
-        LED_OFF;
-
-    if (b.hasClicks()) {
-        printf ("Clicks: %d\n", b.getClicks());
-
-        if (b.getClicks() == 1) {
-            if (configBoostEnable)
-                configBoostEnable = 0;
-            else
-                configBoostEnable = 1;
-            buzzer_ok();
-        }
-        if (b.getClicks() == 2) {
-            screen = Screen::NORMAL;
-            buzzer_shutdown();
-            b.reset();
-            LED_OFF;
-        }
-    }
-}
 
 void gotoDeepSleep (void) {
 

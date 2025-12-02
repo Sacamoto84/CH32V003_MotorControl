@@ -8,30 +8,30 @@ C_SRCS += \
 ../User/EEPROM.c \
 ../User/buzzer.c \
 ../User/ch32v00x_it.c \
-../User/screens.c \
+../User/init.c \
 ../User/system_ch32v00x.c 
 
 C_DEPS += \
 ./User/EEPROM.d \
 ./User/buzzer.d \
 ./User/ch32v00x_it.d \
-./User/screens.d \
+./User/init.d \
 ./User/system_ch32v00x.d 
 
 CPP_SRCS += \
 ../User/main.cpp \
-../User/pwm.cpp 
+../User/screens.cpp 
 
 CPP_DEPS += \
 ./User/main.d \
-./User/pwm.d 
+./User/screens.d 
 
 OBJS += \
 ./User/EEPROM.o \
 ./User/buzzer.o \
 ./User/ch32v00x_it.o \
+./User/init.o \
 ./User/main.o \
-./User/pwm.o \
 ./User/screens.o \
 ./User/system_ch32v00x.o 
 

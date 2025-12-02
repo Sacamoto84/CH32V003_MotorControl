@@ -22,7 +22,8 @@ User/EEPROM.o: ../User/EEPROM.c ../User/EEPROM.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_wwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
- f:/CH32V003_MotorControl/User/pwm.h
+ f:/CH32V003_MotorControl/User/pwm.h \
+ f:/CH32V003_MotorControl/User/buzzer_tunes.h
 
 ../User/EEPROM.h:
 
@@ -73,3 +74,5 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h:
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
 
 f:/CH32V003_MotorControl/User/pwm.h:
+
+f:/CH32V003_MotorControl/User/buzzer_tunes.h:

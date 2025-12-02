@@ -1,4 +1,4 @@
-User/pwm.o: ../User/pwm.cpp f:/CH32V003_MotorControl/SRC/Debug/debug.h \
+User/init.o: ../User/init.c f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/SRC/Core/core_riscv.h \
  f:/CH32V003_MotorControl/User/system_ch32v00x.h \
@@ -21,7 +21,8 @@ User/pwm.o: ../User/pwm.cpp f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_wwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
- f:/CH32V003_MotorControl/User/pwm.h
+ f:/CH32V003_MotorControl/User/pwm.h \
+ f:/CH32V003_MotorControl/User/buzzer_tunes.h
 
 f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
@@ -70,3 +71,5 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h:
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
 
 f:/CH32V003_MotorControl/User/pwm.h:
+
+f:/CH32V003_MotorControl/User/buzzer_tunes.h:

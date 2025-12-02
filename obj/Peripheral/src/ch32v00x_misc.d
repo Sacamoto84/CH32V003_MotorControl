@@ -14,6 +14,7 @@ Peripheral/src/ch32v00x_misc.o: ../SRC/Peripheral/src/ch32v00x_misc.c \
  f:/CH32V003_MotorControl/User/ch32v00x_it.h \
  f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/User/pwm.h \
+ f:/CH32V003_MotorControl/User/buzzer_tunes.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_pwr.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_rcc.h \
@@ -53,6 +54,8 @@ f:/CH32V003_MotorControl/User/ch32v00x_it.h:
 f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
 f:/CH32V003_MotorControl/User/pwm.h:
+
+f:/CH32V003_MotorControl/User/buzzer_tunes.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h:
 

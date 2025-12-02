@@ -229,3 +229,163 @@ void buzzer_button_hold(void) {
     }
 }
 
+
+
+// === 0 - §¯§°§­§¾ ===
+void say_Zero(void) {
+    // §¯-§°-§­-§¾
+    tone1_vol(CONS_N, 80, 70);   // §ß
+    tone1_vol(VOWEL_O, 200, 90); // §à
+    tone1_vol(CONS_N, 100, 70);  // §Ý (§Ü§Ñ§Ü §ß)
+    tone1_vol(VOWEL_I, 80, 50);  // §î (§Þ§ñ§Ô§Ü§Ú§Û)
+}
+
+// === 1 - §°§¥§ª§¯ ===
+void say_One(void) {
+    // §°-§¥-§ª-§¯
+    tone1_vol(VOWEL_O, 150, 80);  // §à
+    tone1_vol(CONS_D, 60, 90);    // §Õ
+    tone1_vol(VOWEL_I, 180, 90);  // §Ú (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_N, 100, 70);   // §ß
+}
+
+// === 2 - §¥§£§¡ ===
+void say_Two(void) {
+    // §¥-§£-§¡
+    tone1_vol(CONS_D, 70, 90);    // §Õ
+    tone1_vol(CONS_V, 60, 80);    // §Ó
+    tone1_vol(VOWEL_A, 200, 100); // §Ñ (§å§Õ§Ñ§â§ß§í§Û)
+}
+
+// === 3 - §´§²§ª ===
+void say_Three(void) {
+    // §´-§²-§ª
+    tone1_vol(CONS_T, 50, 85);    // §ä
+    tone1_vol(CONS_R, 90, 80);    // §â (§Ó§Ú§Ò§â§Ñ§è§Ú§ñ)
+    tone1_vol(CONS_R, 90, 75);    // §â (§á§â§à§Õ§à§Ý§Ø§Ö§ß§Ú§Ö)
+    tone1_vol(VOWEL_I, 180, 100); // §Ú (§å§Õ§Ñ§â§ß§í§Û)
+}
+
+// === 4 - §¹§¦§´§½§²§¦ ===
+void say_Four(void) {
+    // §¹-§¦-§´-§½-§²-§¦
+    tone1_vol(CONS_SH, 80, 75);   // §é (§Ü§Ñ§Ü §Þ§ñ§Ô§Ü§à§Ö §ê)
+    tone1_vol(VOWEL_E, 120, 85);  // §Ö
+    tone1_vol(CONS_T, 50, 70);    // §ä
+    tone1_vol(VOWEL_Y, 150, 90);  // §í (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_R, 80, 70);    // §â
+    tone1_vol(VOWEL_E, 100, 60);  // §Ö
+}
+
+// === 5 - §±§Á§´§¾ ===
+void say_Five(void) {
+    // §±-§Á-§´-§¾
+    tone1_vol(CONS_P, 70, 80);    // §á
+    tone1_vol(VOWEL_A, 180, 100); // §ñ (§Ü§Ñ§Ü §Ñ, §å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_T, 60, 75);    // §ä
+    tone1_vol(VOWEL_I, 80, 50);   // §î
+}
+
+// === 6 - §º§¦§³§´§¾ ===
+void say_Six(void) {
+    // §º-§¦-§³-§´-§¾
+    tone1_vol(CONS_SH, 100, 85);  // §ê
+    tone1_vol(VOWEL_E, 180, 100); // §Ö (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_S, 80, 80);    // §ã
+    tone1_vol(CONS_T, 50, 70);    // §ä
+    tone1_vol(VOWEL_I, 60, 50);   // §î
+}
+
+// === 7 - §³§¦§®§¾ ===
+void say_Seven(void) {
+    // §³-§¦-§®-§¾
+    tone1_vol(CONS_S, 90, 80);    // §ã
+    tone1_vol(VOWEL_E, 200, 100); // §Ö (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_M, 120, 80);   // §Þ
+    tone1_vol(VOWEL_I, 70, 50);   // §î
+}
+
+// === 8 - §£§°§³§¦§®§¾ ===
+void say_Eight(void) {
+    // §£-§°-§³-§¦-§®-§¾
+    tone1_vol(CONS_V, 70, 75);    // §Ó
+    tone1_vol(VOWEL_O, 150, 90);  // §à
+    tone1_vol(CONS_S, 70, 80);    // §ã
+    tone1_vol(VOWEL_E, 180, 100); // §Ö (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_M, 100, 80);   // §Þ
+    tone1_vol(VOWEL_I, 70, 50);   // §î
+}
+
+// === 9 - §¥§¦§£§Á§´§¾ ===
+void say_Nine(void) {
+    // §¥-§¦-§£-§Á-§´-§¾
+    tone1_vol(CONS_D, 60, 80);    // §Õ
+    tone1_vol(VOWEL_E, 120, 85);  // §Ö
+    tone1_vol(CONS_V, 60, 75);    // §Ó
+    tone1_vol(VOWEL_A, 180, 100); // §ñ (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_T, 50, 70);    // §ä
+    tone1_vol(VOWEL_I, 70, 50);   // §î
+}
+
+// === 10 - §¥§¦§³§Á§´§¾ ===
+void say_Ten(void) {
+    // §¥-§¦-§³-§Á-§´-§¾
+    tone1_vol(CONS_D, 60, 80);    // §Õ
+    tone1_vol(VOWEL_E, 180, 100); // §Ö (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_S, 70, 80);    // §ã
+    tone1_vol(VOWEL_A, 120, 85);  // §ñ
+    tone1_vol(CONS_T, 50, 70);    // §ä
+    tone1_vol(VOWEL_I, 70, 50);   // §î
+}
+
+// === 11 - §°§¥§ª§¯§¯§¡§¥§¸§¡§´§¾ ===
+void say_Eleven(void) {
+    // §°-§¥§ª§¯-§¯§¡-§¥§¸§¡-§´§¾
+    tone1_vol(VOWEL_O, 120, 75);  // §à
+    tone1_vol(CONS_D, 50, 80);    // §Õ
+    tone1_vol(VOWEL_I, 150, 90);  // §Ú
+    tone1_vol(CONS_N, 80, 80);    // §ß
+    tone1_vol(VOWEL_A, 100, 75);  // §ß§Ñ
+    tone1_vol(CONS_D, 50, 70);    // §Õ
+    tone1_vol(CONS_T, 50, 70);    // §è
+    tone1_vol(VOWEL_A, 150, 90);  // §Ñ (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_T, 50, 65);    // §ä
+    tone1_vol(VOWEL_I, 60, 50);   // §î
+}
+
+// === 20 - §¥§£§¡§¥§¸§¡§´§¾ ===
+void say_Twenty(void) {
+    // §¥§£§¡-§¥§¸§¡-§´§¾
+    tone1_vol(CONS_D, 60, 85);    // §Õ
+    tone1_vol(CONS_V, 50, 80);    // §Ó
+    tone1_vol(VOWEL_A, 150, 95);  // §Ñ
+    tone1_vol(CONS_D, 50, 75);    // §Õ
+    tone1_vol(CONS_T, 50, 75);    // §è
+    tone1_vol(VOWEL_A, 180, 100); // §Ñ (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_T, 50, 70);    // §ä
+    tone1_vol(VOWEL_I, 60, 50);   // §î
+}
+
+// === 30 - §´§²§ª§¥§¸§¡§´§¾ ===
+void say_Thirty(void) {
+    // §´§²§ª-§¥§¸§¡-§´§¾
+    tone1_vol(CONS_T, 45, 85);    // §ä
+    tone1_vol(CONS_R, 80, 80);    // §â
+    tone1_vol(VOWEL_I, 150, 90);  // §Ú
+    tone1_vol(CONS_D, 50, 75);    // §Õ
+    tone1_vol(CONS_T, 50, 75);    // §è
+    tone1_vol(VOWEL_A, 180, 100); // §Ñ (§å§Õ§Ñ§â§ß§í§Û)
+    tone1_vol(CONS_T, 50, 70);    // §ä
+    tone1_vol(VOWEL_I, 60, 50);   // §î
+}
+
+// === 100 - §³§´§° ===
+void say_Hundred(void) {
+    // §³-§´-§°
+    tone1_vol(CONS_S, 90, 85);    // §ã
+    tone1_vol(CONS_T, 50, 80);    // §ä
+    tone1_vol(VOWEL_O, 200, 100); // §à (§å§Õ§Ñ§â§ß§í§Û)
+}
+
+
+
