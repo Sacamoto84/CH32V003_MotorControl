@@ -9,7 +9,7 @@ extern "C" {
 #include <ch32v00x.h>
 #include <stdio.h>
 
-#include <pwm.h>
+
 
 #include "buzzer_tunes.h"
 
@@ -48,12 +48,13 @@ void SDI_Printf_Enable (void);
 
 enum Screen {
     NORMAL,            // 0
-    BUSY,              // 1
-    SET_POWER,         // 2
-    SET_BOOST_ENABLE,  // 3
+
+
+    
+    SET_POWER,         // 1
+    SET_BOOST_ENABLE,  // 2
+    SET_BOOST_POWER,   // 3
     SET_BOOST_TIME,    // 4
-    SET_BOOST_POWER,   // 5
-    CPU_RESET,         // 6
 };
 
 extern uint64_t millisec;

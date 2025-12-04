@@ -18,7 +18,7 @@
 #include <debug.h>
 #include "uButton.h"
 #include "EEPROM.h"
-#include "ws2812b_driver.h"
+#include "pwm.hpp"
 
 uButton b;
 Pwm pwm;
@@ -102,7 +102,6 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 void userEEPROM() {
     EEPROM_init();
     printf ("EEPROM Demo Free: %d\n", get_free_space());
-
     printf (".READ CONFIG Boost Enable\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);
     printf (".READ CONFIG Boost Time\n");
@@ -122,7 +121,7 @@ int main (void) {
     EXTI_INT_INIT();
 
     USART_Printf_Init (115200);
-   
+
     printf ("\r\n---------------------------------------\n");
     printf ("SystemClk:%d\r\n", SystemCoreClock);
 
@@ -154,11 +153,11 @@ int main (void) {
 
     pwm.init (100, 9, 50);
 
-    tone1_vol (CONS_K, 60, 80);     // г (как к)
-    tone1_vol (VOWEL_O, 150, 90);   // о
-    tone1_vol (CONS_T, 50, 80);     // т
-    tone1_vol (VOWEL_O, 180, 100);  // о (ударный)
-    tone1_vol (CONS_V, 80, 75);     // в
+    // tone1_vol (CONS_K, 60, 80);     // г (как к)
+    // tone1_vol (VOWEL_O, 150, 90);   // о
+    // tone1_vol (CONS_T, 50, 80);     // т
+    // tone1_vol (VOWEL_O, 180, 100);  // о (ударный)
+    // tone1_vol (CONS_V, 80, 75);     // в
 
     // tone1 (1000, 100);
     // tone1 (1500, 150);
@@ -229,9 +228,14 @@ int main (void) {
     // buzzer_winxp_msg();
     // delay (1000);
 
-    // buzzer_startup();delay (1000);
-    //  buzzer_shutdown();delay (1000);
-    //   buzzer_charging();delay (1000);
+    buzzer_startup();
+    delay (1000);
+    buzzer_shutdown();
+    delay (1000);
+
+    buzzer_charging();
+    delay (1000);
+
     //  buzzer_button_hold();delay (1000);
 
 
@@ -247,28 +251,34 @@ int main (void) {
 
         if (screen == Screen::NORMAL) {
             ScreenNormal();
-
-            if (comandMotorOn) {
-                pwm.enable();
-                LED_ON;
-            } else {
-                pwm.disable();
-                LED_OFF;
-            }
         }
 
-        if (screen == Screen::SET_POWER) {
-            ScreenNormal();  // TODO
+        if (screen == Screen::SET_POWER) {         //1
+           
         }
 
-        if (screen == Screen::SET_BOOST_POWER) {
+        if (screen == Screen::SET_BOOST_ENABLE) {  //2
+            ScreenBoostEnable();
+            comandMotorOn = 0;
+        }
+
+        if (screen == Screen::SET_BOOST_POWER) {   //3
             ScreenBoostPower();
             comandMotorOn = 0;
         }
 
-        if (screen == Screen::SET_BOOST_ENABLE) {
-            ScreenBoostEnable();
+        if (screen == Screen::SET_BOOST_TIME) {    //4
+           
             comandMotorOn = 0;
+        }
+
+
+        if (comandMotorOn) {
+            pwm.enable();
+            LED_ON;
+        } else {
+            pwm.disable();
+            LED_OFF;
         }
     }
 }

@@ -22,7 +22,6 @@ User/ch32v00x_it.o: ../User/ch32v00x_it.c \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_wwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
- f:/CH32V003_MotorControl/User/pwm.h \
  f:/CH32V003_MotorControl/User/buzzer_tunes.h
 
 f:/CH32V003_MotorControl/User/ch32v00x_it.h:
@@ -70,7 +69,5 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_wwdg.h:
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
-
-f:/CH32V003_MotorControl/User/pwm.h:
 
 f:/CH32V003_MotorControl/User/buzzer_tunes.h:
