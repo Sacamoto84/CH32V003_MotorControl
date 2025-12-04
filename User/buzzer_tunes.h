@@ -7,15 +7,6 @@
 
 #include "debug.h"
 
-// §®§Ñ§Ü§â§à§ã§í §Õ§Ý§ñ §å§á§â§Ñ§Ó§Ý§Ö§ß§Ú§ñ buzzer (§à§á§â§Ö§Õ§Ö§Ý§Ú§ä§Ö §Ó main.h §Ú§Ý§Ú §Ù§Õ§Ö§ã§î)
-#ifndef BUZZER_ON
-#define BUZZER_ON GPIO_WriteBit(GPIOC, GPIO_Pin_1, Bit_SET)
-#endif
-
-#ifndef BUZZER_OFF
-#define BUZZER_OFF GPIO_WriteBit(GPIOC, GPIO_Pin_1, Bit_RESET)
-#endif
-
 extern void melody_Nokia(void);
 extern void melody_iPhoneMarimba(void);
 extern void melody_SamsungWhistle(void);

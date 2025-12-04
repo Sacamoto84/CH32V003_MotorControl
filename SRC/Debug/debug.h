@@ -21,7 +21,7 @@ extern "C" {
 
 /* DEBUG UATR Definition */
 #ifndef DEBUG
-#define DEBUG DEBUG_UART1_Remap2
+#define DEBUG DEBUG_UART1_Remap2//DEBUG_UART1_Remap2
 #endif
 
 /* SDI Printf Definition */
@@ -32,10 +32,10 @@ extern "C" {
 #define SDI_PRINT SDI_PR_CLOSE
 #endif
 
-#define LED_ON GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_SET)
+#define LED_ON  GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_SET)
 #define LED_OFF GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_RESET)
 
-#define BUZZER_ON GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_SET)
+#define BUZZER_ON  GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_SET)
 #define BUZZER_OFF GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_RESET)
 
 #define KEY GPIO_ReadInputDataBit (GPIOC, GPIO_Pin_4)

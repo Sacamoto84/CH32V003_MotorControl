@@ -57,6 +57,16 @@
 				"parentLogicPath": "User",
 				"type": "file",
 				"name": "pwm.cpp"
+			},
+			{
+				"name": "ws2812b_driver.c",
+				"parentLogicPath": "User",
+				"type": "file"
+			},
+			{
+				"name": "ws2812b_driver.h",
+				"parentLogicPath": "User",
+				"type": "file"
 			}
 		],
 		"projectName": "Standby_Mode",

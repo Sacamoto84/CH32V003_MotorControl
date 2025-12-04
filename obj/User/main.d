@@ -23,7 +23,7 @@ User/main.o: ../User/main.cpp f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/User/pwm.h \
  f:/CH32V003_MotorControl/User/buzzer_tunes.h ../User/uButton.h \
- ../User/uButtonVirt.h ../User/EEPROM.h
+ ../User/uButtonVirt.h ../User/EEPROM.h ../User/ws2812b_driver.h
 
 f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
@@ -80,3 +80,5 @@ f:/CH32V003_MotorControl/User/buzzer_tunes.h:
 ../User/uButtonVirt.h:
 
 ../User/EEPROM.h:
+
+../User/ws2812b_driver.h:

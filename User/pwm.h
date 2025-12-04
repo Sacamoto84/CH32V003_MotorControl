@@ -16,7 +16,7 @@ class Pwm {
     Pwm() {
     }
 
-        uint16_t arr = 100;
+    uint16_t arr = 100;
     uint16_t ccp = 50;
 
     /*********************************************************************
@@ -84,7 +84,8 @@ class Pwm {
         TIM_CtrlPWMOutputs (TIM1, ENABLE);
 
         /* 8) Включаем таймер */
-        enable();
+        // enable();
+        TIM_Cmd (TIM1, ENABLE);
     }
 
     void setDuty (uint16_t duty) {
@@ -92,15 +93,37 @@ class Pwm {
     }
 
     void enable() {
+        // 1) Вернуть PA2 в режим AF_PP (для TIM1_CH2N)
+        GPIO_InitTypeDef gpio;
+        gpio.GPIO_Pin = GPIO_Pin_2;
+        gpio.GPIO_Mode = GPIO_Mode_AF_PP;
+        gpio.GPIO_Speed = GPIO_Speed_30MHz;
+        GPIO_Init (GPIOA, &gpio);
+
+        // 2) Включить таймер
         TIM_Cmd (TIM1, ENABLE);
+
+        // 3) Включить главный выход (MOE)
+        TIM_CtrlPWMOutputs (TIM1, ENABLE);
     }
 
     void disable() {
-        TIM_Cmd (TIM1, DISABLE);  // таймер остановлен
+
+
+        // Полностью отключаем выходы таймера
+        TIM_CtrlPWMOutputs (TIM1, DISABLE);
+        TIM_Cmd (TIM1, DISABLE);
+
+        // Переводим PA2 в обычный GPIO
+        GPIO_InitTypeDef gpio;
+        gpio.GPIO_Pin = GPIO_Pin_2;
+        gpio.GPIO_Mode = GPIO_Mode_Out_PP;
+        gpio.GPIO_Speed = GPIO_Speed_10MHz;
+        GPIO_Init (GPIOA, &gpio);
+
+        // Явно ставим 0
+        GPIO_WriteBit (GPIOA, GPIO_Pin_2, Bit_RESET);
     }
-
-
-
 };
 
 #endif  // __cplusplus

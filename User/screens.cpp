@@ -150,8 +150,8 @@ void ScreenNormal (void) {
     if (b.timeout()) {
         printf ("Timeout\n");
         buzzer_robot();
-        // gotoDeepSleep();
+        if (!comandMotorOn) {
+            gotoDeepSleep();
+        }
     }
 }
-
-

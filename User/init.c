@@ -20,7 +20,7 @@ void init (void) {
     // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All & ~GPIO_Pin_4;
     // GPIO_Init (GPIOD, &GPIO_InitStructure);
 
-    GPIO_Init (GPIOC, &GPIO_InitStructure);
+    //GPIO_Init (GPIOC, &GPIO_InitStructure);
 
     // LED
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
@@ -45,7 +45,5 @@ void init (void) {
     LED_ON;
     Delay_Ms (5);
     LED_OFF;
-
-
 
 }

@@ -18,6 +18,7 @@
 #include <debug.h>
 #include "uButton.h"
 #include "EEPROM.h"
+#include "ws2812b_driver.h"
 
 uButton b;
 Pwm pwm;
@@ -114,12 +115,14 @@ int main (void) {
 
     // Разблокируем нормальный двухпроводный отладочный интерфейс навсегда
     // (записывается в опции-байты при первой прошивке)
+    SystemCoreClockUpdate();
 
     init();
 
     EXTI_INT_INIT();
 
     USART_Printf_Init (115200);
+   
     printf ("\r\n---------------------------------------\n");
     printf ("SystemClk:%d\r\n", SystemCoreClock);
 
@@ -134,8 +137,6 @@ int main (void) {
     //----
 
     // RCC_ClocksTypeDef RCC_ClocksStatus={0};
-
-    SystemCoreClockUpdate();
 
     // RCC_LSICmd (ENABLE);
     // while (RCC_GetFlagStatus (RCC_FLAG_LSIRDY) == RESET);
@@ -153,11 +154,11 @@ int main (void) {
 
     pwm.init (100, 9, 50);
 
-    tone1_vol(CONS_K, 60, 80);    // г (как к)
-    tone1_vol(VOWEL_O, 150, 90);  // о
-    tone1_vol(CONS_T, 50, 80);    // т
-    tone1_vol(VOWEL_O, 180, 100); // о (ударный)
-    tone1_vol(CONS_V, 80, 75);    // в
+    tone1_vol (CONS_K, 60, 80);     // г (как к)
+    tone1_vol (VOWEL_O, 150, 90);   // о
+    tone1_vol (CONS_T, 50, 80);     // т
+    tone1_vol (VOWEL_O, 180, 100);  // о (ударный)
+    tone1_vol (CONS_V, 80, 75);     // в
 
     // tone1 (1000, 100);
     // tone1 (1500, 150);
@@ -239,7 +240,6 @@ int main (void) {
     printf ("Go...\n");
 
     while (1) {
-        // Delay_Ms(1000);
 
         // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
 
@@ -273,7 +273,6 @@ int main (void) {
     }
 }
 
-
 void ScreenBoostPower (void) {
 
     if (b.hold()) {
@@ -281,7 +280,6 @@ void ScreenBoostPower (void) {
         buzzer_shutdown();
     }
 }
-
 
 void gotoDeepSleep (void) {
 
