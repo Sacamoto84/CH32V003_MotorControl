@@ -10,7 +10,6 @@ extern "C" {
 #include <stdio.h>
 
 
-
 #include "buzzer_tunes.h"
 
 /* UART Printf Definition */
@@ -21,7 +20,7 @@ extern "C" {
 
 /* DEBUG UATR Definition */
 #ifndef DEBUG
-#define DEBUG DEBUG_UART1_Remap2//DEBUG_UART1_Remap2
+#define DEBUG DEBUG_UART1_Remap2  // DEBUG_UART1_Remap2
 #endif
 
 /* SDI Printf Definition */
@@ -32,10 +31,10 @@ extern "C" {
 #define SDI_PRINT SDI_PR_CLOSE
 #endif
 
-#define LED_ON  GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_SET)
+#define LED_ON GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_SET)
 #define LED_OFF GPIO_WriteBit (GPIOC, GPIO_Pin_2, Bit_RESET)
 
-#define BUZZER_ON  GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_SET)
+#define BUZZER_ON GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_SET)
 #define BUZZER_OFF GPIO_WriteBit (GPIOC, GPIO_Pin_1, Bit_RESET)
 
 #define KEY GPIO_ReadInputDataBit (GPIOC, GPIO_Pin_4)
@@ -47,10 +46,9 @@ void USART_Printf_Init (uint32_t baudrate);
 void SDI_Printf_Enable (void);
 
 enum Screen {
-    NORMAL,            // 0
+    NORMAL,  // 0
 
 
-    
     SET_POWER,         // 1
     SET_BOOST_ENABLE,  // 2
     SET_BOOST_POWER,   // 3
@@ -60,8 +58,11 @@ enum Screen {
 extern uint64_t millisec;
 
 // main.c
-extern uint16_t configBoostEnable;
-extern uint16_t comandMotorOn;        // Признак того что мотор должен работать
+extern uint16_t comandMotorOn;       // Признак того что мотор должен работать
+
+extern uint16_t configBoostEnable;   // Настройка того что будет использоваться буст
+extern uint16_t configBoostTime;     // Время буста в ms
+extern uint16_t configCurrentPower;  // Текущая мощность 0..100
 
 extern void gotoDeepSleep (void);
 
@@ -79,8 +80,13 @@ extern void PWM_Disable (void);
 
 
 // screen.c
-extern void ScreenBoostEnable (void);
+
 extern void ScreenNormal (void);
+extern void ScreenPower (void);
+extern void ScreenBoostEnable (void);
+extern void ScreenBoostPower (void);
+extern void ScreenBoostTime (void);
+
 
 #ifdef __cplusplus
 }

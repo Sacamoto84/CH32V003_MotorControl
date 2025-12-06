@@ -87,26 +87,26 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
     // printf ("temp: %d\n", temp);
     if (temp == -1) {
         // Переменной нет
-        printf ("EEPROM id:%d ! Not Present !\n", id);
+        printf ("EEPROM id:%d ! Not Present !\r\n", id);
         uint16_t res = EEPROM_saveVar (id, def);  // Сохранить по умолчанию 0
         printf ("EEPROM Save code:%d\n", res);
         uint16_t test = EEPROM_readVar (id);
-        printf ("EEPROM Verification id:%d Value: %d\n", id, test);
+        printf ("EEPROM Verification id:%d Value: %d\r\n", id, test);
         *value = def;
     } else {
-        printf ("EEPROM id:%d Value:%d\n", id, temp);
+        printf ("EEPROM id:%d Value:%d\r\n", id, temp);
         *value = temp;
     }
 }
 
 void userEEPROM() {
     EEPROM_init();
-    printf ("EEPROM Demo Free: %d\n", get_free_space());
-    printf (".READ CONFIG Boost Enable\n");
+    printf ("EEPROM Demo Free: %d\r\n", get_free_space());
+    printf (".READ CONFIG Boost Enable\r\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);
-    printf (".READ CONFIG Boost Time\n");
+    printf (".READ CONFIG Boost Time\r\n");
     userInitVarEEPROM (2, &configBoostTime, 200);
-    printf (".READ CONFIG Power\n");
+    printf (".READ CONFIG Power\r\n");
     userInitVarEEPROM (3, &configCurrentPower, 40);
 }
 
@@ -122,17 +122,17 @@ int main (void) {
 
     USART_Printf_Init (115200);
 
-    printf ("\r\n---------------------------------------\n");
-    printf ("SystemClk:%d\r\n", SystemCoreClock);
+    printf ("\r\n---------------------------------------\r\n");
+    printf ("Привет SystemClk:%d\r\n", SystemCoreClock);
 
     userEEPROM();
 
     //----
-    printf ("-------------------------\n");
-    printf ("CONFIG Boost Enable : %d\n", configBoostEnable);
-    printf ("CONFIG Boost Time   : %d ms\n", configBoostTime);
-    printf ("CONFIG Power        : %d\n", configCurrentPower);
-    printf ("-------------------------\n");
+    printf ("-------------------------\r\n");
+    printf ("CONFIG Boost Enable : %d\r\n", configBoostEnable);
+    printf ("CONFIG Boost Time   : %d ms\r\n", configBoostTime);
+    printf ("CONFIG Power        : %d\r\n", configCurrentPower);
+    printf ("-------------------------\r\n");
     //----
 
     // RCC_ClocksTypeDef RCC_ClocksStatus={0};
@@ -152,6 +152,42 @@ int main (void) {
     SysTick->CTLR = 0xb;
 
     pwm.init (100, 9, 50);
+
+
+    // --- СЛУЖЕБНЫЕ ЗВУКИ ---
+    buzzer_ok();
+    delay (1000);
+
+    buzzer_error();
+    delay (1000);
+
+    buzzer_error_strong();
+    delay (1000);
+
+    buzzer_warning();
+    delay (1000);
+
+    buzzer_warning_double();
+    delay (1000);
+
+    buzzer_click();
+    delay (1000);
+
+    buzzer_success_long();
+    delay (1000);
+
+    buzzer_critical();
+    delay (1000);
+
+    buzzer_beepboop();
+    delay (1000);
+
+    buzzer_access_denied();
+    delay (1000);
+
+    buzzer_notify();
+    delay (1000);
+
 
     // tone1_vol (CONS_K, 60, 80);     // г (как к)
     // tone1_vol (VOWEL_O, 150, 90);   // о
@@ -228,20 +264,19 @@ int main (void) {
     // buzzer_winxp_msg();
     // delay (1000);
 
-    buzzer_startup();
-    delay (1000);
-    buzzer_shutdown();
-    delay (1000);
+    // buzzer_startup();
+    // delay (1000);
+    // buzzer_shutdown();
+    // delay (1000);
 
-    buzzer_charging();
-    delay (1000);
+    // buzzer_charging();
+    // delay (1000);
 
     //  buzzer_button_hold();delay (1000);
 
-
     // gotoDeepSleep();
 
-    printf ("Go...\n");
+    printf ("Go...\r\n");
 
     while (1) {
 
@@ -253,23 +288,24 @@ int main (void) {
             ScreenNormal();
         }
 
-        if (screen == Screen::SET_POWER) {         //1
-           
+        if (screen == Screen::SET_POWER) {  // 1
+            ScreenPower();
         }
 
-        if (screen == Screen::SET_BOOST_ENABLE) {  //2
+        if (screen == Screen::SET_BOOST_ENABLE) {  // 2
             ScreenBoostEnable();
             comandMotorOn = 0;
         }
 
-        if (screen == Screen::SET_BOOST_POWER) {   //3
-            ScreenBoostPower();
+        if (screen == Screen::SET_BOOST_POWER) {  // 3
+
             comandMotorOn = 0;
+            ScreenBoostPower();
         }
 
-        if (screen == Screen::SET_BOOST_TIME) {    //4
-           
+        if (screen == Screen::SET_BOOST_TIME) {  // 4
             comandMotorOn = 0;
+            ScreenBoostTime();
         }
 
 
@@ -280,14 +316,6 @@ int main (void) {
             pwm.disable();
             LED_OFF;
         }
-    }
-}
-
-void ScreenBoostPower (void) {
-
-    if (b.hold()) {
-        screen = Screen::NORMAL;
-        buzzer_shutdown();
     }
 }
 
