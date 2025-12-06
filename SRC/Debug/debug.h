@@ -48,7 +48,6 @@ void SDI_Printf_Enable (void);
 enum Screen {
     NORMAL,  // 0
 
-
     SET_POWER,         // 1
     SET_BOOST_ENABLE,  // 2
     SET_BOOST_POWER,   // 3
@@ -67,7 +66,6 @@ extern uint16_t configCurrentPower;  // Текущая мощность 0..100
 extern void gotoDeepSleep (void);
 
 extern void delay (int time);
-
 
 // init.c
 extern void init (void);

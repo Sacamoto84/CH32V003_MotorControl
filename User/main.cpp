@@ -151,72 +151,14 @@ int main (void) {
     SysTick->CNT = 0;
     SysTick->CTLR = 0xb;
 
-    pwm.init (100, 9, 50);
-
+    pwm.init (100, 9, 0);
+    pwm.setDuty(0);
+    pwm.disable();
+    
 
     // --- СЛУЖЕБНЫЕ ЗВУКИ ---
-    buzzer_ok();
-    delay (1000);
-
-    buzzer_error();
-    delay (1000);
-
-    buzzer_error_strong();
-    delay (1000);
-
-    buzzer_warning();
-    delay (1000);
-
-    buzzer_warning_double();
-    delay (1000);
-
-    buzzer_click();
-    delay (1000);
-
-    buzzer_success_long();
-    delay (1000);
-
-    buzzer_critical();
-    delay (1000);
-
-    buzzer_beepboop();
-    delay (1000);
-
-    buzzer_access_denied();
-    delay (1000);
-
-    buzzer_notify();
-    delay (1000);
-
-
-    // tone1_vol (CONS_K, 60, 80);     // г (как к)
-    // tone1_vol (VOWEL_O, 150, 90);   // о
-    // tone1_vol (CONS_T, 50, 80);     // т
-    // tone1_vol (VOWEL_O, 180, 100);  // о (ударный)
-    // tone1_vol (CONS_V, 80, 75);     // в
-
-    // tone1 (1000, 100);
-    // tone1 (1500, 150);
-
-    // // Восходящая гамма с crescendo
-    // tone1_vol (523, 80, 40);     // C5 - тихо
-    // tone1_vol (659, 80, 60);     // E5 - средне
-    // tone1_vol (784, 100, 80);    // G5 - громче
-    // tone1_vol (1047, 150, 100);  // C6 - ГРОМКО!
-
+    // buzzer_ok();
     // delay (1000);
-
-    // // Восходящий паттерн с crescendo
-    // tone1_vol (800, 60, 50);     // Тихий старт
-    // delay (30);
-    // tone1_vol (1000, 60, 70);    // Нарастание
-    // delay (30);
-    // tone1_vol (1200, 150, 100);  // Яркий финал
-
-    //  --- СЛУЖЕБНЫЕ ЗВУКИ ---
-    //  buzzer_ok();
-    //   delay (1000);
-
 
     // buzzer_error();
     // delay (1000);
@@ -224,55 +166,29 @@ int main (void) {
     // buzzer_error_strong();
     // delay (1000);
 
-    //  buzzer_warning();
-    //  delay (1000);
-
-    //  buzzer_warning_double();
-    // // delay (1000);
-
-    //  buzzer_click(); //Короткий
-    //  delay (1000);
-
-    //  buzzer_success_long();
-    //  delay (1000);
-
-    //  buzzer_critical();
-    //  delay (1000);
-
-    //  buzzer_beepboop();
-    //  delay (1000);
-
-    //  buzzer_access_denied();
-    //  delay (1000);
-
-    //  buzzer_notify();
-    //  delay (1000);
-
-    // // Дополнительные стилизованные:
-    // buzzer_ios_click();
+    // buzzer_warning();
     // delay (1000);
 
-    // buzzer_android_notify();
+    // buzzer_warning_double();
     // delay (1000);
 
-    // buzzer_robot();
+    // buzzer_click();
     // delay (1000);
 
-    // buzzer_microwave_done();
+    // buzzer_success_long();
     // delay (1000);
 
-    // buzzer_winxp_msg();
+    // buzzer_critical();
     // delay (1000);
 
-    // buzzer_startup();
-    // delay (1000);
-    // buzzer_shutdown();
+    // buzzer_beepboop();
     // delay (1000);
 
-    // buzzer_charging();
+    // buzzer_access_denied();
     // delay (1000);
 
-    //  buzzer_button_hold();delay (1000);
+    // buzzer_notify();
+    // delay (1000);
 
     // gotoDeepSleep();
 
@@ -320,7 +236,6 @@ int main (void) {
 }
 
 void gotoDeepSleep (void) {
-
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 

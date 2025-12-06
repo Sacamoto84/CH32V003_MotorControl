@@ -7,6 +7,24 @@ extern Screen screen;
 void status (int step);
 void exit (void);
 
+void beep (int value) {
+    delay (1000);
+    for (int i = 0; i < value; i++) {
+        LED_ON;
+        // buzzer_beepboop();
+        // buzzer_access_denied();
+        // buzzer_notify();
+        // buzzer_critical();
+
+        // buzzer_click();
+
+        buzzer_warning();
+
+        LED_OFF;
+        delay (200);
+    }
+}
+
 void ScreenNormal (void) {
 
     static int step = 0;
@@ -49,47 +67,22 @@ void ScreenNormal (void) {
 
         if (step == Screen::SET_POWER) {
             screen = Screen::SET_POWER;
-            delay (1000);
-            for (int i = 0; i < Screen::SET_POWER; i++) {
-                LED_ON;
-                buzzer_ios_click();
-                LED_OFF;
-                delay (200);
-            }
+            beep (Screen::SET_POWER);
         }
 
         if (step == Screen::SET_BOOST_ENABLE) {
             screen = Screen::SET_BOOST_ENABLE;
-            delay (1000);
-            for (int i = 0; i < Screen::SET_BOOST_ENABLE; i++) {
-                LED_ON;
-                buzzer_ios_click();
-                LED_OFF;
-                delay (200);
-            }
+            beep (Screen::SET_BOOST_ENABLE);
         }
 
         if (step == Screen::SET_BOOST_POWER) {
             screen = Screen::SET_BOOST_POWER;
-            delay (1000);
-            for (int i = 0; i < Screen::SET_BOOST_POWER; i++) {
-                LED_ON;
-                buzzer_ios_click();
-                LED_OFF;
-                delay (200);
-            }
+            beep (Screen::SET_BOOST_POWER);
         }
-
 
         if (step == Screen::SET_BOOST_TIME) {
             screen = Screen::SET_BOOST_TIME;
-            delay (1000);
-            for (int i = 0; i < Screen::SET_BOOST_TIME; i++) {
-                LED_ON;
-                buzzer_ios_click();
-                LED_OFF;
-                delay (200);
-            }
+            beep (Screen::SET_BOOST_TIME);
         }
     }
 
@@ -123,17 +116,59 @@ void ScreenNormal (void) {
 
 void ScreenPower() {
 
+    int imp = configCurrentPower / 5;
 
-    
+    if (b.hasClicks()) {
+        printf ("ScreenPower Clicks: %d\r\n", b.getClicks());
 
+        if (b.getClicks() == 1) {
+            buzzer_click();
+            imp++;
+            if (imp > 20)
+                imp = 20;
+            configCurrentPower = imp * 5;
+            printf ("++ Clicks: %d imp:%d\r\n", b.getClicks(), imp);
+        }
 
+        if (b.getClicks() == 2) {
+            screen = Screen::NORMAL;
+            buzzer_shutdown();
+            b.reset();
+            LED_OFF;
+        }
+
+        if (b.getClicks() == 3) {
+            buzzer_click();
+            if (imp > 1)
+                imp--;
+            configCurrentPower = imp * 5;
+            printf ("-- Clicks: %d imp:%d\r\n", b.getClicks(), imp);
+        }
+
+        // Status
+        if (b.getClicks() == 4) {
+            printf ("Status\r\n");
+            delay (1000);
+            for (int i = 0; i < imp; i++) {
+                LED_ON;
+                buzzer_beepboop();
+                LED_OFF;
+                delay (300);
+            }
+        }
+
+        // Save
+        if (b.getClicks() == 5) {
+            printf ("Save\r\n");
+            //Сохраняем реальную мощность configCurrentPower
+        }
+    }
 }
 
 void ScreenBoostEnable (void) {
 
     if (configBoostEnable)
         LED_ON;
-
     else
         LED_OFF;
 
@@ -206,16 +241,15 @@ void ScreenBoostTime() {
 
     if (b.hasClicks()) {
         printf ("Clicks: %d\r\n", b.getClicks());
-        
+
         if (b.getClicks() == 2) {
             exit();
         }
 
         if (b.getClicks() == 3) {
             printf ("getClicks == 3\r\n");
-            status(step);
+            status (step);
         }
-
     }
 }
 
