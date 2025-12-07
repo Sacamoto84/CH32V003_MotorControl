@@ -57,26 +57,6 @@
 				"parentLogicPath": "User",
 				"type": "file",
 				"name": "pwm.cpp"
-			},
-			{
-				"parentLogicPath": "User",
-				"type": "file",
-				"name": "ws2812b_driver.c"
-			},
-			{
-				"parentLogicPath": "User",
-				"type": "file",
-				"name": "ws2812b_driver.h"
-			},
-			{
-				"parentLogicPath": "User",
-				"type": "file",
-				"name": "flash_stm32.c"
-			},
-			{
-				"parentLogicPath": "User",
-				"type": "file",
-				"name": "flash_stm32.h"
 			}
 		],
 		"projectName": "Standby_Mode",
@@ -101,7 +81,11 @@
 				"excludeResources": [
 					"${project}/SRC",
 					"${project}/User/EEPROM1.c",
-					"${project}/User/EEPROM1.h"
+					"${project}/User/EEPROM1.h",
+					"${project}/User/flash_stm32.c",
+					"${project}/User/flash_stm32.h",
+					"${project}/User/EEPROM.c",
+					"${project}/User/eeprom_ch32v.h"
 				],
 				"optimization": {
 					"level": "size",
@@ -144,7 +128,7 @@
 					"other_warning_flags": ""
 				},
 				"debugging": {
-					"debug_level": "default",
+					"debug_level": "none",
 					"debug_format": "default",
 					"generate_prof_information": false,
 					"generate_gprof_information": false,
@@ -364,7 +348,7 @@
 					"multiplication_subset_of_the_M_extension": false,
 					"integer_ABI": "ilp32e",
 					"floating_point_ABI": "none",
-					"tuning": "default",
+					"tuning": "size",
 					"code_model": "default",
 					"small_data_limit": 0,
 					"align": "default",

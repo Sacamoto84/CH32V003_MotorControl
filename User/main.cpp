@@ -19,10 +19,10 @@
 #include "uButton.h"
 #include "pwm.hpp"
 
-#include "eeprom_ch32v.h"
+#include "eeprom.h"
 
 // Создать handle
-EEPROM_HandleTypeDef heeprom = EEPROM_HANDLE_DEFAULT();
+//EEPROM_HandleTypeDef heeprom = EEPROM_HANDLE_DEFAULT();
 
 uButton b;
 Pwm pwm;
@@ -109,20 +109,22 @@ void userEEPROM() {
 
     uint16_t status;
 
-    // 1. Инициализация
-    status = EEPROM_Init (&heeprom);
-    if (status != EEPROM_OK) {
-        // Ошибка инициализации
-        printf ("Ошибка инициализации EEPROM\r\n");
-        uint16_t res = EEPROM_Format(&heeprom);
-        if (res == EEPROM_OK ){
-             printf ("Форматирование EEPROM OK\r\n");
-        }
-        else {
-             printf ("Форматирование EEPROM ошибка\r\n");
-        }
-        return;
-    }
+    EE_Init();
+  
+    // // 1. Инициализация
+    // status = EEPROM_Init (&heeprom);
+    // if (status != EEPROM_OK) {
+    //     // Ошибка инициализации
+    //     printf ("Ошибка инициализации EEPROM\r\n");
+    //     uint16_t res = EEPROM_Format(&heeprom);
+    //     if (res == EEPROM_OK ){
+    //          printf ("Форматирование EEPROM OK\r\n");
+    //     }
+    //     else {
+    //          printf ("Форматирование EEPROM ошибка\r\n");
+    //     }
+    //     return;
+    // }
 
     printf (".READ CONFIG Boost Enable\r\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);

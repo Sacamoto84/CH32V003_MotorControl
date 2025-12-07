@@ -18,12 +18,24 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* Debug configuration */
+#ifndef EEPROM_DEBUG
+#define EEPROM_DEBUG 1  // 0 = отключить, 1 = включить отладочные сообщения
+#endif
+
+#if EEPROM_DEBUG
+#include <stdio.h>
+#define EEPROM_LOG(fmt, ...) printf("[EEPROM] " fmt "\n", ##__VA_ARGS__)
+#else
+#define EEPROM_LOG(fmt, ...) ((void)0)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "ch32v00x.h"
+#include "ch32v00x_flash.h"
 
 /* Configuration - CH32V003 specific */
 #define EEPROM_PAGE_SIZE        1024u           // CH32V003: 1KB pages
@@ -51,6 +63,11 @@ typedef enum {
     EEPROM_FLASH_ERROR = 0xFF
 } EEPROM_Status;
 
+// /* Forward declaration for C++ compatibility */
+// #ifdef __cplusplus
+// typedef struct EEPROM_HandleTypeDef EEPROM_HandleTypeDef;
+// #endif
+
 /* EEPROM Handle structure */
 typedef struct {
     uint32_t PageBase0;
@@ -58,11 +75,6 @@ typedef struct {
     uint32_t PageSize;
     uint16_t Status;
 } EEPROM_HandleTypeDef;
-
-// /* Forward declaration for C++ compatibility */
-// #ifdef __cplusplus
-// typedef struct EEPROM_HandleTypeDef EEPROM_HandleTypeDef;
-// #endif
 
 /* Public API */
 uint16_t EEPROM_Init(EEPROM_HandleTypeDef *heeprom);

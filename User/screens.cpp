@@ -37,8 +37,8 @@ void ScreenNormal (void) {
         printf ("Click\r\n");
         buzzer_ios_click();
 
-        for (int i = 0; i < 16; i++) {
-            uint16_t res = EEPROM_Write (&heeprom, 4, 0XAA);
+        for (int i = 0; i < 128; i++) {
+            uint16_t res = EEPROM_Write (&heeprom, 4, i);
         }
 
         if (comandMotorOn)

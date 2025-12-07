@@ -81,37 +81,5 @@
         <arguments>1.0-name-matches-false-false-pwm.cpp</arguments>
       </matcher>
     </filter>
-    <filter>
-      <name>User</name>
-      <type>6</type>
-      <matcher>
-        <id>org.eclipse.ui.ide.multiFilter</id>
-        <arguments>1.0-name-matches-false-false-ws2812b_driver.c</arguments>
-      </matcher>
-    </filter>
-    <filter>
-      <name>User</name>
-      <type>6</type>
-      <matcher>
-        <id>org.eclipse.ui.ide.multiFilter</id>
-        <arguments>1.0-name-matches-false-false-ws2812b_driver.h</arguments>
-      </matcher>
-    </filter>
-    <filter>
-      <name>User</name>
-      <type>6</type>
-      <matcher>
-        <id>org.eclipse.ui.ide.multiFilter</id>
-        <arguments>1.0-name-matches-false-false-flash_stm32.c</arguments>
-      </matcher>
-    </filter>
-    <filter>
-      <name>User</name>
-      <type>6</type>
-      <matcher>
-        <id>org.eclipse.ui.ide.multiFilter</id>
-        <arguments>1.0-name-matches-false-false-flash_stm32.h</arguments>
-      </matcher>
-    </filter>
   </filteredResources>
 </projectDescription>
