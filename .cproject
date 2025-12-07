@@ -261,7 +261,7 @@
             </toolChain>
           </folderInfo>
           <sourceEntries>
-            <entry excluding="SRC" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+            <entry excluding="SRC|User/EEPROM1.c|User/EEPROM1.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
           </sourceEntries>
         </configuration>
       </storageModule>

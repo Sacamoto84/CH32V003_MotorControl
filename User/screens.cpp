@@ -1,6 +1,9 @@
 #include "debug.h"
 #include "uButton.h"
-#include "EEPROM.h"
+
+#include "eeprom_ch32v.h"
+
+extern EEPROM_HandleTypeDef heeprom;
 
 extern uButton b;
 extern Screen screen;
@@ -33,6 +36,10 @@ void ScreenNormal (void) {
     if (b.click()) {
         printf ("Click\r\n");
         buzzer_ios_click();
+
+        for (int i = 0; i < 16; i++) {
+            uint16_t res = EEPROM_Write (&heeprom, 4, 0XAA);
+        }
 
         if (comandMotorOn)
             comandMotorOn = 0;
@@ -171,13 +178,13 @@ void ScreenPower() {
             // Сохраняем реальную мощность configCurrentPower
             beep_Save();
             beep_Save();
-            uint16_t i = (uint16_t)(100);
-            int res = EEPROM_saveByte (3, 100);
-            printf ("Save res:%d\r\n", res);
-            uint16_t test = EEPROM_readByte (3);
-            printf ("Save resd 3 res:%d\r\n", test);
-        }
 
+            uint16_t res = EEPROM_Write (&heeprom, 3, (uint16_t)(100));
+            printf ("Save res:%d\r\n", res);
+            uint16_t temp;
+            res = EEPROM_Read (&heeprom, 3, &temp);
+            printf ("Save id:3 res:%d value:%d\r\n", res, temp);
+        }
     }
 }
 

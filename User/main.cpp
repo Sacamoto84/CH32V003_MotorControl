@@ -17,8 +17,12 @@
 
 #include <debug.h>
 #include "uButton.h"
-#include "EEPROM.h"
 #include "pwm.hpp"
+
+#include "eeprom_ch32v.h"
+
+// Создать handle
+EEPROM_HandleTypeDef heeprom = EEPROM_HANDLE_DEFAULT();
 
 uButton b;
 Pwm pwm;
@@ -83,15 +87,17 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
     // Читаем boostEnable
     // Проверка существования переменной
-    uint32_t temp = EEPROM_readByte (id);
+    uint16_t temp = 0;
+    uint16_t res = EEPROM_Read(&heeprom, id, &temp); 
+
     // printf ("temp: %d\n", temp);
-    if (temp == -1) {
+    if (res != EEPROM_OK) {
         // Переменной нет
         printf ("EEPROM id:%d ! Not Present !\r\n", id);
-        uint16_t res = EEPROM_saveByte (id, def);  // Сохранить по умолчанию 0
+        res = EEPROM_Write (&heeprom,id, def);  // Сохранить по умолчанию 0
         printf ("EEPROM Save code:%d\n", res);
-        uint16_t test = EEPROM_readByte (id);
-        printf ("EEPROM Verification id:%d Value: %d\r\n", id, test);
+        res = EEPROM_Read (&heeprom, id, &temp);
+        printf ("EEPROM Verification id:%d Value: %d code:%d\r\n", id, temp, res);
         *value = def;
     } else {
         printf ("EEPROM id:%d Value:%d\r\n", id, temp);
@@ -100,13 +106,23 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 }
 
 void userEEPROM() {
-    EEPROM_init();
-    EEPROM_Dev eeprom;
-    eeprom_init(&eeprom, EEPROM_ADDRESS);
-    // Статус
-    uint16_t used_vars, free_space;
-    eeprom_getStatus (&eeprom, &used_vars, &free_space);
-    printf ("Variables: %d, Free space: %d bytes\r\n", used_vars, free_space);
+
+    uint16_t status;
+
+    // 1. Инициализация
+    status = EEPROM_Init (&heeprom);
+    if (status != EEPROM_OK) {
+        // Ошибка инициализации
+        printf ("Ошибка инициализации EEPROM\r\n");
+        uint16_t res = EEPROM_Format(&heeprom);
+        if (res == EEPROM_OK ){
+             printf ("Форматирование EEPROM OK\r\n");
+        }
+        else {
+             printf ("Форматирование EEPROM ошибка\r\n");
+        }
+        return;
+    }
 
     printf (".READ CONFIG Boost Enable\r\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);
@@ -120,7 +136,7 @@ int main (void) {
 
     // Разблокируем нормальный двухпроводный отладочный интерфейс навсегда
     // (записывается в опции-байты при первой прошивке)
-    SystemCoreClockUpdate();
+    // SystemCoreClockUpdate();
 
     init();
 

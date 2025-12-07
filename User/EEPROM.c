@@ -1,675 +1,562 @@
-/******************************************************************************
- * EEPROM.c - Flash Storage Library для CH32V003J4M6
- *
- * ОСОБЕННОСТИ:
- * 1. Использует 1024 байта (последняя страница flash)
- * 2. Разделена на 16 блоков по 64 байта (Fast Page Erase)
- * 3. Wear leveling между блоками
- * 4. Структура: ID(1) + Value(1) = 2 байта (БЕЗ CRC для экономии записей)
- ******************************************************************************/
+/**
+ * EEPROM Emulation Implementation for CH32V003
+ * Based on ST AN3969 algorithm
+ */
 
-#include "EEPROM.h"
-#include <stdbool.h>
-#include <string.h>
+#include "eeprom_ch32v.h"
+#include "ch32v00x_flash.h"
 
-// Legacy compatibility
-static EEPROM_Dev legacy_device;
+/* Internal helper functions */
+static uint16_t EE_CheckPage(uint32_t pageBase, uint16_t status, uint32_t pageSize);
+static uint16_t EE_ErasePage(uint32_t pageBase, uint32_t pageSize);
+static uint16_t EE_CheckErasePage(uint32_t pageBase, uint16_t status, uint32_t pageSize);
+static uint32_t EE_FindValidPage(EEPROM_HandleTypeDef *heeprom);
+static uint16_t EE_GetVariablesCount(uint32_t pageBase, uint16_t skipAddress, uint32_t pageSize);
+static uint16_t EE_PageTransfer(EEPROM_HandleTypeDef *heeprom, uint32_t newPage, uint32_t oldPage, uint16_t skipAddress);
+static uint16_t EE_VerifyPageFullWriteVariable(EEPROM_HandleTypeDef *heeprom, uint16_t Address, uint16_t Data);
 
-#define MCU_CORE_CLOCK FUNCONF_SYSTEM_CORE_CLOCK
-
-// Flash keys
-#define FLASH_KEY1 ((uint32_t)0x45670123)
-#define FLASH_KEY2 ((uint32_t)0xCDEF89AB)
-
-// Storage constants
-#define EEPROM_TOTAL_SIZE 1024          // Общий размер (последняя страница)
-#define BLOCK_SIZE 64                    // Размер блока Fast Page Erase
-#define NUM_BLOCKS 16                    // Количество блоков (1024/64)
-#define BLOCK_HEADER_SIZE 4              // Заголовок блока
-#define VARIABLE_SIZE 2                  // ID(1) + Value(1) - БЕЗ CRC!
-#define FLASH_TIMEOUT_CYCLES 50000
-
-// Заголовок блока (4 байта)
-typedef struct {
-    uint16_t marker;        // 0xEE55 - признак валидного блока
-    uint8_t sequence;       // Номер последовательности для wear leveling
-    uint8_t status;         // 0xFF=пустой, 0xAA=активный, 0x00=устаревший
-} __attribute__ ((packed)) BlockHeader;
-
-// Variable entry (2 bytes) - упрощено без CRC
-typedef struct {
-    uint8_t id;
-    uint8_t value;
-} __attribute__ ((packed)) VariableEntry;
-
-// Forward declarations
-static uint8_t flash_unlock(void);
-static void flash_lock(void);
-static uint8_t flash_wait_for_operation(void);
-static uint8_t flash_erase_page(uint32_t address);
-static uint8_t flash_erase_block_64(uint32_t address);
-static uint8_t flash_write_halfword(uint32_t address, uint16_t data);
-static uint8_t find_active_block(EEPROM_Dev *dev);
-static uint8_t find_variable_in_storage(EEPROM_Dev *dev, uint8_t id, uint32_t *address);
-static uint8_t get_block_free_space(uint32_t block_addr);
-static uint8_t compact_to_new_block(EEPROM_Dev *dev, uint8_t current_block);
-
-// Initialize EEPROM
-uint8_t eeprom_init(EEPROM_Dev *dev, uint32_t base_address) {
-    if (!dev) {
-        return EEPROM_ERROR_INVALID_PARAM;
-    }
-
-    if (dev->initialized) {
-        eeprom_deinit(dev);
-    }
-
-    dev->base_address = base_address;
-    dev->max_variables = EEPROM_MAX_VARIABLES;
-    dev->wear_level_counter = 0;
-    dev->last_write_time = 0;
-    dev->write_count = 0;
-    dev->initialized = true;
-
-    // Ищем активный блок или форматируем
-    uint8_t active_block = find_active_block(dev);
+/**
+  * @brief  Check page for blank
+  * @param  pageBase: page base address
+  * @param  status: expected status
+  * @param  pageSize: page size
+  * @retval EEPROM_OK if page is blank, EEPROM_BAD_FLASH otherwise
+  */
+static uint16_t EE_CheckPage(uint32_t pageBase, uint16_t status, uint32_t pageSize) {
+    uint32_t pageEnd = pageBase + pageSize;
     
-    if (active_block == 0xFF) {
-        // Не найден активный блок - форматируем
-        uint8_t result = eeprom_format(dev);
-        if (result != EEPROM_OK) {
-            dev->initialized = false;
+    // Check page status
+    uint16_t pageStatus = (*(__IO uint16_t*)pageBase);
+    if (pageStatus != EEPROM_ERASED && pageStatus != status)
+        return EEPROM_BAD_FLASH;
+    
+    // Check if page is empty (skip first 4 bytes: status + erase counter)
+    for (uint32_t addr = pageBase + 4; addr < pageEnd; addr += 4) {
+        if ((*(__IO uint32_t*)addr) != 0xFFFFFFFF)
+            return EEPROM_BAD_FLASH;
+    }
+    
+    return EEPROM_OK;
+}
+
+/**
+  * @brief  Erase page and increment erase counter
+  * @param  pageBase: page base address
+  * @param  pageSize: page size
+  * @retval EEPROM_OK or error code
+  */
+static uint16_t EE_ErasePage(uint32_t pageBase, uint32_t pageSize) {
+    FLASH_Status status;
+    uint16_t eraseCount;
+    
+    // Read current erase counter
+    uint16_t pageStatus = (*(__IO uint16_t*)pageBase);
+    if ((pageStatus == EEPROM_ERASED) || 
+        (pageStatus == EEPROM_VALID_PAGE) || 
+        (pageStatus == EEPROM_RECEIVE_DATA)) {
+        eraseCount = (*(__IO uint16_t*)(pageBase + 2)) + 1;
+    } else {
+        eraseCount = 0;
+    }
+    
+    // Unlock flash
+    FLASH_Unlock();
+    
+    // Erase page (CH32V003: 1KB fast page erase or standard page erase)
+    status = FLASH_ErasePage(pageBase);
+    if (status != FLASH_COMPLETE) {
+        FLASH_Lock();
+        return EEPROM_FLASH_ERROR;
+    }
+    
+    // Write erase counter
+    status = FLASH_ProgramHalfWord(pageBase + 2, eraseCount);
+    FLASH_Lock();
+    
+    if (status != FLASH_COMPLETE)
+        return EEPROM_FLASH_ERROR;
+    
+    return EEPROM_OK;
+}
+
+/**
+  * @brief  Check page and erase if needed
+  * @param  pageBase: page base address
+  * @param  status: expected status
+  * @param  pageSize: page size
+  * @retval EEPROM_OK or error code
+  */
+static uint16_t EE_CheckErasePage(uint32_t pageBase, uint16_t status, uint32_t pageSize) {
+    uint16_t result;
+    
+    result = EE_CheckPage(pageBase, status, pageSize);
+    if (result != EEPROM_OK) {
+        result = EE_ErasePage(pageBase, pageSize);
+        if (result != EEPROM_OK)
             return result;
-        }
-    }
-
-    return EEPROM_OK;
-}
-
-void eeprom_deinit(EEPROM_Dev *dev) {
-    if (!dev || !dev->initialized) {
-        return;
-    }
-
-    dev->base_address = 0;
-    dev->max_variables = 0;
-    dev->wear_level_counter = 0;
-    dev->last_write_time = 0;
-    dev->write_count = 0;
-    dev->initialized = false;
-}
-
-bool eeprom_isInitialized(EEPROM_Dev *dev) {
-    return (dev && dev->initialized);
-}
-
-// Форматирует всю область и инициализирует первый блок
-uint8_t eeprom_format(EEPROM_Dev *dev) {
-    if (!dev || !dev->initialized) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    // Стираем всю страницу (1024 байта)
-    uint8_t result = flash_erase_page(dev->base_address);
-    if (result != EEPROM_OK) {
-        return result;
-    }
-
-    // Инициализируем первый блок (блок 0)
-    uint32_t block0_addr = dev->base_address;
-    
-    // Записываем заголовок блока
-    // marker = 0xEE55
-    result = flash_write_halfword(block0_addr, 0xEE55);
-    if (result != EEPROM_OK) {
-        return result;
+        return EE_CheckPage(pageBase, status, pageSize);
     }
     
-    // sequence = 0, status = 0xAA (активный)
-    result = flash_write_halfword(block0_addr + 2, 0xAA00);
-    if (result != EEPROM_OK) {
-        return result;
-    }
-
-    dev->write_count = 0;
-    dev->wear_level_counter = 0;
-
     return EEPROM_OK;
 }
 
-// Сохранить байт
-uint8_t eeprom_saveByte(EEPROM_Dev *dev, uint8_t id, uint8_t value) {
-    if (!dev || !dev->initialized) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    if (id == 0 || id == 0xFF) {
-        return EEPROM_ERROR_INVALID_ID;
-    }
-
-    // Находим активный блок
-    uint8_t active_block_num = find_active_block(dev);
-    if (active_block_num == 0xFF) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    uint32_t active_block_addr = dev->base_address + (active_block_num * BLOCK_SIZE);
-
-    // Помечаем старую запись как удалённую (если существует)
-    uint32_t old_address;
-    if (find_variable_in_storage(dev, id, &old_address)) {
-        uint8_t result = flash_write_halfword(old_address, 0x0000);
-        if (result != EEPROM_OK) {
-            return result;
-        }
-    }
-
-    // Проверяем свободное место в текущем блоке
-    uint8_t free_space = get_block_free_space(active_block_addr);
+/**
+  * @brief  Find valid page for operation
+  * @param  heeprom: EEPROM handle
+  * @retval Valid page address or 0 if not found
+  */
+static uint32_t EE_FindValidPage(EEPROM_HandleTypeDef *heeprom) {
+    uint16_t status0 = (*(__IO uint16_t*)heeprom->PageBase0);
+    uint16_t status1 = (*(__IO uint16_t*)heeprom->PageBase1);
     
-    if (free_space < VARIABLE_SIZE) {
-        // Нужна компакция в новый блок
-        uint8_t result = compact_to_new_block(dev, active_block_num);
-        if (result != EEPROM_OK) {
-            return result;
-        }
+    if (status0 == EEPROM_VALID_PAGE && status1 == EEPROM_ERASED)
+        return heeprom->PageBase0;
+    if (status1 == EEPROM_VALID_PAGE && status0 == EEPROM_ERASED)
+        return heeprom->PageBase1;
+    
+    return 0;
+}
+
+/**
+  * @brief  Count unique variables in page
+  * @param  pageBase: page base address
+  * @param  skipAddress: address to skip (or 0xFFFF)
+  * @param  pageSize: page size
+  * @retval Number of unique variables
+  */
+static uint16_t EE_GetVariablesCount(uint32_t pageBase, uint16_t skipAddress, uint32_t pageSize) {
+    uint16_t varAddress, nextAddress;
+    uint32_t pageEnd = pageBase + pageSize;
+    uint16_t count = 0;
+    
+    // Start from first data slot (skip status + counter)
+    for (uint32_t addr = pageBase + 6; addr < pageEnd; addr += 4) {
+        varAddress = (*(__IO uint16_t*)addr);
+        if (varAddress == 0xFFFF || varAddress == skipAddress)
+            continue;
         
-        // Обновляем адрес активного блока
-        active_block_num = find_active_block(dev);
-        if (active_block_num == 0xFF) {
-            return EEPROM_ERROR_STORAGE_FULL;
-        }
-        active_block_addr = dev->base_address + (active_block_num * BLOCK_SIZE);
-    }
-
-    // Находим свободное место в активном блоке
-    uint32_t write_address = active_block_addr + BLOCK_HEADER_SIZE;
-
-    while (write_address < (active_block_addr + BLOCK_SIZE - VARIABLE_SIZE)) {
-        uint8_t stored_id = *(volatile uint8_t *)write_address;
-        if (stored_id == 0xFF) {
-            break;
-        }
-        write_address += VARIABLE_SIZE;
-    }
-
-    if (write_address >= (active_block_addr + BLOCK_SIZE - VARIABLE_SIZE)) {
-        return EEPROM_ERROR_STORAGE_FULL;
-    }
-
-    // Записываем переменную (2 байта = 1 halfword) - БЕЗ CRC!
-    uint8_t result;
-    uint16_t word = (uint16_t)(value << 8) | id;
-    result = flash_write_halfword(write_address, word);
-    if (result != EEPROM_OK)
-        return result;
-
-    dev->write_count++;
-    dev->last_write_time = SysTick->CNT;
-
-    return EEPROM_OK;
-}
-
-// Прочитать байт
-uint8_t eeprom_readByte(EEPROM_Dev *dev, uint8_t id, uint8_t *value) {
-    if (!dev || !dev->initialized || !value) {
-        return EEPROM_ERROR_INVALID_PARAM;
-    }
-
-    uint32_t address;
-    if (!find_variable_in_storage(dev, id, &address)) {
-        return EEPROM_ERROR_VAR_NOT_FOUND;
-    }
-
-    // Читаем значение (2 байта = 1 halfword)
-    uint16_t word = *(volatile uint16_t *)address;
-    *value = (word >> 8) & 0xFF;
-
-    return EEPROM_OK;
-}
-
-bool eeprom_varExists(EEPROM_Dev *dev, uint8_t id) {
-    uint32_t dummy_address;
-    return find_variable_in_storage(dev, id, &dummy_address);
-}
-
-uint8_t eeprom_deleteVar(EEPROM_Dev *dev, uint8_t id) {
-    if (!dev || !dev->initialized) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    uint32_t address;
-    if (!find_variable_in_storage(dev, id, &address)) {
-        return EEPROM_ERROR_VAR_NOT_FOUND;
-    }
-
-    uint8_t result = flash_write_halfword(address, 0x0000);
-    return result;
-}
-
-uint8_t eeprom_getStatus(EEPROM_Dev *dev, uint16_t *used_vars, uint16_t *free_space) {
-    if (!dev || !dev->initialized) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    if (used_vars) {
-        // Подсчёт уникальных переменных
-        uint8_t unique_ids[256] = {0};
-        uint8_t count = 0;
+        count++;
         
-        for (uint8_t block = 0; block < NUM_BLOCKS; block++) {
-            uint32_t block_addr = dev->base_address + (block * BLOCK_SIZE);
-            BlockHeader *header = (BlockHeader *)block_addr;
-            
-            if (header->marker != 0xEE55) continue;
-            
-            uint32_t addr = block_addr + BLOCK_HEADER_SIZE;
-            while (addr < (block_addr + BLOCK_SIZE - VARIABLE_SIZE)) {
-                uint8_t stored_id = *(volatile uint8_t *)addr;
-                if (stored_id == 0xFF) break;
-                if (stored_id != 0) {
-                    unique_ids[stored_id] = 1;
-                }
-                addr += VARIABLE_SIZE;
-            }
-        }
-        
-        for (int i = 0; i < 256; i++) {
-            if (unique_ids[i]) count++;
-        }
-        *used_vars = count;
-    }
-
-    if (free_space) {
-        uint8_t active_block = find_active_block(dev);
-        if (active_block != 0xFF) {
-            uint32_t block_addr = dev->base_address + (active_block * BLOCK_SIZE);
-            *free_space = get_block_free_space(block_addr);
-        } else {
-            *free_space = 0;
-        }
-    }
-
-    return EEPROM_OK;
-}
-
-// Ручная компакция
-uint8_t eeprom_compact(EEPROM_Dev *dev) {
-    if (!dev || !dev->initialized) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    uint8_t active_block = find_active_block(dev);
-    if (active_block == 0xFF) {
-        return EEPROM_ERROR_NOT_INIT;
-    }
-
-    return compact_to_new_block(dev, active_block);
-}
-
-// Flash operations
-static uint8_t flash_unlock(void) {
-    if (FLASH->CTLR & FLASH_CTLR_LOCK) {
-        FLASH->KEYR = FLASH_KEY1;
-        FLASH->KEYR = FLASH_KEY2;
-
-        if (FLASH->CTLR & FLASH_CTLR_LOCK) {
-            return EEPROM_ERROR_FLASH_LOCK;
-        }
-    }
-    return EEPROM_OK;
-}
-
-static void flash_lock(void) {
-    FLASH->CTLR |= FLASH_CTLR_LOCK;
-}
-
-static uint8_t flash_wait_for_operation(void) {
-    uint32_t timeout = FLASH_TIMEOUT_CYCLES;
-
-    while ((FLASH->STATR & FLASH_STATR_BSY) && timeout) {
-        timeout--;
-    }
-
-    return (timeout > 0) ? EEPROM_OK : EEPROM_ERROR_TIMEOUT;
-}
-
-// Стирание всей страницы (1024 байта)
-static uint8_t flash_erase_page(uint32_t address) {
-    uint8_t result = flash_unlock();
-    if (result != EEPROM_OK) {
-        return result;
-    }
-
-    result = flash_wait_for_operation();
-    if (result != EEPROM_OK) {
-        flash_lock();
-        return result;
-    }
-
-    FLASH->CTLR |= FLASH_CTLR_PER;
-    FLASH->ADDR = address;
-    FLASH->CTLR |= FLASH_CTLR_STRT;
-
-    result = flash_wait_for_operation();
-
-    FLASH->CTLR &= ~FLASH_CTLR_PER;
-
-    if (*(volatile uint32_t *)address != 0xFFFFFFFF) {
-        flash_lock();
-        return EEPROM_ERROR_FLASH_ERASE;
-    }
-
-    flash_lock();
-    return result;
-}
-
-// Fast Page Erase - стирание 64 байт
-static uint8_t flash_erase_block_64(uint32_t address) {
-    uint8_t result = flash_unlock();
-    if (result != EEPROM_OK) {
-        return result;
-    }
-
-    result = flash_wait_for_operation();
-    if (result != EEPROM_OK) {
-        flash_lock();
-        return result;
-    }
-
-    // Используем Page Erase 64 Byte (FLASH_CTLR_PAGE_ER)
-    FLASH->CTLR |= FLASH_CTLR_PAGE_ER;  // 0x00020000
-    FLASH->ADDR = address;
-    FLASH->CTLR |= FLASH_CTLR_STRT;
-
-    result = flash_wait_for_operation();
-
-    FLASH->CTLR &= ~FLASH_CTLR_PAGE_ER;
-
-    // Проверяем стирание
-    if (*(volatile uint32_t *)address != 0xFFFFFFFF) {
-        flash_lock();
-        return EEPROM_ERROR_FLASH_ERASE;
-    }
-
-    flash_lock();
-    return result;
-}
-
-static uint8_t flash_write_halfword(uint32_t address, uint16_t data) {
-    uint8_t result = flash_unlock();
-    if (result != EEPROM_OK) {
-        return result;
-    }
-
-    result = flash_wait_for_operation();
-    if (result != EEPROM_OK) {
-        flash_lock();
-        return result;
-    }
-
-    FLASH->CTLR |= FLASH_CTLR_PG;
-
-    *(volatile uint16_t *)address = data;
-
-    result = flash_wait_for_operation();
-
-    FLASH->CTLR &= ~FLASH_CTLR_PG;
-
-    if (*(volatile uint16_t *)address != data) {
-        flash_lock();
-        return EEPROM_ERROR_FLASH_VERIFY;
-    }
-
-    flash_lock();
-    return result;
-}
-
-// Найти активный блок
-static uint8_t find_active_block(EEPROM_Dev *dev) {
-    uint8_t max_sequence = 0;
-    uint8_t active_block = 0xFF;
-    uint8_t found_first = 0;
-
-    for (uint8_t i = 0; i < NUM_BLOCKS; i++) {
-        uint32_t block_addr = dev->base_address + (i * BLOCK_SIZE);
-        BlockHeader *header = (BlockHeader *)block_addr;
-
-        if (header->marker == 0xEE55 && header->status == 0xAA) {
-            if (!found_first) {
-                max_sequence = header->sequence;
-                active_block = i;
-                found_first = 1;
-            } else {
-                // Учитываем переполнение счётчика (255 -> 0)
-                int8_t diff = (int8_t)(header->sequence - max_sequence);
-                if (diff > 0) {
-                    max_sequence = header->sequence;
-                    active_block = i;
-                }
-            }
-        }
-    }
-
-    return active_block;
-}
-
-// Найти переменную во всех блоках (возвращает последнее вхождение)
-static uint8_t find_variable_in_storage(EEPROM_Dev *dev, uint8_t id, uint32_t *address) {
-    uint32_t last_found = 0;
-    uint8_t found = 0;
-    uint8_t max_sequence = 0;
-    uint8_t found_first_seq = 0;
-
-    // Ищем во всех блоках, начиная с самого нового
-    for (uint8_t block = 0; block < NUM_BLOCKS; block++) {
-        uint32_t block_addr = dev->base_address + (block * BLOCK_SIZE);
-        BlockHeader *header = (BlockHeader *)block_addr;
-
-        if (header->marker != 0xEE55) continue;
-
-        uint32_t current_addr = block_addr + BLOCK_HEADER_SIZE;
-        uint32_t block_last_found = 0;
-        uint8_t block_found = 0;
-
-        // Ищем последнее вхождение в этом блоке
-        while (current_addr < (block_addr + BLOCK_SIZE - VARIABLE_SIZE)) {
-            uint8_t stored_id = *(volatile uint8_t *)current_addr;
-
-            if (stored_id == 0xFF) {
+        // Check if this variable is updated later
+        for (uint32_t idx = addr + 4; idx < pageEnd; idx += 4) {
+            nextAddress = (*(__IO uint16_t*)idx);
+            if (nextAddress == varAddress) {
+                count--;
                 break;
             }
-
-            if (stored_id == id && stored_id != 0) {
-                block_last_found = current_addr;
-                block_found = 1;
-            }
-
-            current_addr += VARIABLE_SIZE;
-        }
-
-        // Если нашли в этом блоке, проверяем sequence
-        if (block_found) {
-            if (!found_first_seq) {
-                max_sequence = header->sequence;
-                last_found = block_last_found;
-                found = 1;
-                found_first_seq = 1;
-            } else {
-                // Учитываем переполнение счётчика
-                int8_t diff = (int8_t)(header->sequence - max_sequence);
-                if (diff > 0) {
-                    max_sequence = header->sequence;
-                    last_found = block_last_found;
-                    found = 1;
-                }
-            }
         }
     }
-
-    if (found && address) {
-        *address = last_found;
-    }
-
-    return found;
+    
+    return count;
 }
 
-// Получить свободное место в блоке
-static uint8_t get_block_free_space(uint32_t block_addr) {
-    uint32_t current_addr = block_addr + BLOCK_HEADER_SIZE;
-    uint8_t used = BLOCK_HEADER_SIZE;
-
-    while (current_addr < (block_addr + BLOCK_SIZE)) {
-        uint8_t stored_id = *(volatile uint8_t *)current_addr;
-        if (stored_id == 0xFF) {
+/**
+  * @brief  Transfer data from old page to new page
+  * @param  heeprom: EEPROM handle
+  * @param  newPage: new page base address
+  * @param  oldPage: old page base address
+  * @param  skipAddress: address to skip (or 0xFFFF)
+  * @retval EEPROM_OK or error code
+  */
+static uint16_t EE_PageTransfer(EEPROM_HandleTypeDef *heeprom, uint32_t newPage, uint32_t oldPage, uint16_t skipAddress) {
+    FLASH_Status flashStatus;
+    uint32_t newIdx, oldIdx;
+    uint16_t address, data;
+    bool found;
+    
+    uint32_t newEnd = newPage + heeprom->PageSize;
+    uint32_t oldEnd = oldPage + 4;
+    
+    // Find first free slot in new page
+    for (newIdx = newPage + 4; newIdx < newEnd; newIdx += 4) {
+        if ((*(__IO uint32_t*)newIdx) == 0xFFFFFFFF)
             break;
-        }
-        used += VARIABLE_SIZE;
-        current_addr += VARIABLE_SIZE;
     }
-
-    return (BLOCK_SIZE - used);
-}
-
-// Компакция в новый блок с wear leveling
-static uint8_t compact_to_new_block(EEPROM_Dev *dev, uint8_t current_block) {
-    uint32_t current_block_addr = dev->base_address + (current_block * BLOCK_SIZE);
-    BlockHeader *current_header = (BlockHeader *)current_block_addr;
     
-    // Находим следующий свободный блок (циклически)
-    uint8_t next_block = (current_block + 1) % NUM_BLOCKS;
-    uint32_t next_block_addr = dev->base_address + (next_block * BLOCK_SIZE);
-
-    // Стираем следующий блок (Fast Erase 64 байта)
-    uint8_t result = flash_erase_block_64(next_block_addr);
-    if (result != EEPROM_OK) {
+    if (newIdx >= newEnd)
+        return EEPROM_OUT_SIZE;
+    
+    FLASH_Unlock();
+    
+    // Transfer variables from old to new page (scan from end to beginning)
+    for (oldIdx = oldPage + (heeprom->PageSize - 2); oldIdx > oldEnd; oldIdx -= 4) {
+        address = (*(__IO uint16_t*)oldIdx);
+        
+        if (address == 0xFFFF || address == skipAddress)
+            continue;
+        
+        // Check if already copied
+        found = false;
+        for (uint32_t idx = newPage + 6; idx < newIdx; idx += 4) {
+            if ((*(__IO uint16_t*)idx) == address) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (found)
+            continue;
+        
+        // Copy variable
+        if (newIdx < newEnd) {
+            data = (*(__IO uint16_t*)(oldIdx - 2));
+            
+            flashStatus = FLASH_ProgramHalfWord(newIdx, data);
+            if (flashStatus != FLASH_COMPLETE) {
+                FLASH_Lock();
+                return EEPROM_FLASH_ERROR;
+            }
+            
+            flashStatus = FLASH_ProgramHalfWord(newIdx + 2, address);
+            if (flashStatus != FLASH_COMPLETE) {
+                FLASH_Lock();
+                return EEPROM_FLASH_ERROR;
+            }
+            
+            newIdx += 4;
+        } else {
+            FLASH_Lock();
+            return EEPROM_OUT_SIZE;
+        }
+    }
+    
+    FLASH_Lock();
+    
+    // Erase old page
+    uint16_t result = EE_CheckErasePage(oldPage, EEPROM_ERASED, heeprom->PageSize);
+    if (result != EEPROM_OK)
         return result;
-    }
-
-    // Записываем заголовок нового блока
-    uint8_t new_sequence = current_header->sequence + 1;
-    result = flash_write_halfword(next_block_addr, 0xEE55);
-    if (result != EEPROM_OK) return result;
     
-    result = flash_write_halfword(next_block_addr + 2, 0xAA00 | new_sequence);
-    if (result != EEPROM_OK) return result;
-
-    // Копируем только последние версии переменных из ВСЕХ блоков
-    uint8_t copied_ids[256] = {0};
-    uint32_t write_pos = next_block_addr + BLOCK_HEADER_SIZE;
-
-    // Сначала собираем все уникальные ID и их последние значения
-    // Проходим блоки от нового к старому
-    for (int pass = 0; pass < NUM_BLOCKS; pass++) {
-        // Ищем блок с максимальным sequence среди непройденных
-        uint8_t max_seq = 0;
-        int8_t max_block = -1;
-        uint8_t found_block = 0;
-        
-        for (uint8_t block = 0; block < NUM_BLOCKS; block++) {
-            uint32_t block_addr = dev->base_address + (block * BLOCK_SIZE);
-            BlockHeader *header = (BlockHeader *)block_addr;
-            
-            if (header->marker != 0xEE55) continue;
-            
-            // Проверяем, не обработан ли уже этот блок
-            uint8_t already_processed = 0;
-            if (block == next_block) already_processed = 1;  // Пропускаем новый блок
-            
-            if (!already_processed) {
-                if (!found_block || ((int8_t)(header->sequence - max_seq) > 0)) {
-                    max_seq = header->sequence;
-                    max_block = block;
-                    found_block = 1;
-                }
-            }
-        }
-        
-        if (max_block < 0) break;
-        
-        // Обрабатываем найденный блок
-        uint32_t block_addr = dev->base_address + (max_block * BLOCK_SIZE);
-        uint32_t addr = block_addr + BLOCK_HEADER_SIZE;
-        
-        while (addr < (block_addr + BLOCK_SIZE - VARIABLE_SIZE)) {
-            uint8_t stored_id = *(volatile uint8_t *)addr;
-            if (stored_id == 0xFF) break;
-            
-            if (stored_id != 0 && !copied_ids[stored_id]) {
-                // Копируем переменную (2 байта = 1 halfword)
-                if (write_pos + VARIABLE_SIZE <= (next_block_addr + BLOCK_SIZE)) {
-                    uint16_t word = *(volatile uint16_t *)addr;
-                    
-                    result = flash_write_halfword(write_pos, word);
-                    if (result != EEPROM_OK) return result;
-                    
-                    write_pos += VARIABLE_SIZE;
-                    copied_ids[stored_id] = 1;
-                }
-            }
-            addr += VARIABLE_SIZE;
-        }
-        
-        // Помечаем блок как обработанный, записывая status = 0x00
-        result = flash_write_halfword(block_addr + 2, (max_seq << 8) | 0x00);
-        if (result != EEPROM_OK) return result;
-    }
-
-    dev->wear_level_counter++;
+    // Mark new page as valid
+    FLASH_Unlock();
+    flashStatus = FLASH_ProgramHalfWord(newPage, EEPROM_VALID_PAGE);
+    FLASH_Lock();
+    
+    if (flashStatus != FLASH_COMPLETE)
+        return EEPROM_FLASH_ERROR;
+    
     return EEPROM_OK;
 }
 
-// Legacy API
-
-
-
-void EEPROM_init(void) {
-    eeprom_init(&legacy_device, EEPROM_ADDRESS);
-}
-
-uint8_t EEPROM_format(void) {
-    return eeprom_format(&legacy_device);
-}
-
-uint8_t EEPROM_saveByte(uint8_t id, uint8_t value) {
-    return eeprom_saveByte(&legacy_device, id, value);
-}
-
-int16_t EEPROM_readByte(uint8_t id) {
-    uint8_t value;
-    uint8_t res = eeprom_readByte(&legacy_device, id, &value);
+/**
+  * @brief  Write variable with page full check
+  * @param  heeprom: EEPROM handle
+  * @param  Address: variable address
+  * @param  Data: variable data
+  * @retval EEPROM_OK or error code
+  */
+static uint16_t EE_VerifyPageFullWriteVariable(EEPROM_HandleTypeDef *heeprom, uint16_t Address, uint16_t Data) {
+    FLASH_Status flashStatus;
+    uint32_t pageBase, pageEnd, newPage;
+    uint16_t count;
     
-    if (res == EEPROM_OK) {
-        return value;
+    // Get valid page
+    pageBase = EE_FindValidPage(heeprom);
+    if (pageBase == 0)
+        return EEPROM_NO_VALID_PAGE;
+    
+    pageEnd = pageBase + heeprom->PageSize;
+    
+    // Check if variable exists and can be updated in place
+    for (uint32_t idx = pageEnd - 2; idx > pageBase; idx -= 4) {
+        if ((*(__IO uint16_t*)idx) == Address) {
+            count = (*(__IO uint16_t*)(idx - 2));
+            if (count == Data)
+                return EEPROM_OK;
+            if (count == 0xFFFF) {
+                FLASH_Unlock();
+                flashStatus = FLASH_ProgramHalfWord(idx - 2, Data);
+                FLASH_Lock();
+                return (flashStatus == FLASH_COMPLETE) ? EEPROM_OK : EEPROM_FLASH_ERROR;
+            }
+            break;
+        }
     }
     
-    printf("Error EEPROM_readByte code:%d ", res);
-    switch (res) {
-        case 0: printf("Success"); break;
-        case 1: printf("Flash unlock/lock failed"); break;
-        case 2: printf("Flash erase failed"); break;
-        case 3: printf("Flash write failed"); break;
-        case 4: printf("Flash write verification failed"); break;
-        case 5: printf("Flash operation timeout"); break;
-        case 6: printf("EEPROM not initialized"); break;
-        case 7: printf("Variable ID not found"); break;
-        case 8: printf("CRC verification failed"); break;
-        case 9: printf("Storage capacity exceeded"); break;
-        case 10: printf("Invalid variable ID"); break;
-        case 11: printf("Invalid parameter"); break;
+    // Find free slot
+    for (uint32_t idx = pageBase + 4; idx < pageEnd; idx += 4) {
+        if ((*(__IO uint32_t*)idx) == 0xFFFFFFFF) {
+            FLASH_Unlock();
+            flashStatus = FLASH_ProgramHalfWord(idx, Data);
+            if (flashStatus != FLASH_COMPLETE) {
+                FLASH_Lock();
+                return EEPROM_FLASH_ERROR;
+            }
+            flashStatus = FLASH_ProgramHalfWord(idx + 2, Address);
+            FLASH_Lock();
+            return (flashStatus == FLASH_COMPLETE) ? EEPROM_OK : EEPROM_FLASH_ERROR;
+        }
     }
-    printf("\n");
-    return -1;
+    
+    // Page full - need transfer
+    count = EE_GetVariablesCount(pageBase, Address, heeprom->PageSize) + 1;
+    if (count >= (heeprom->PageSize / 4 - 1))
+        return EEPROM_OUT_SIZE;
+    
+    newPage = (pageBase == heeprom->PageBase1) ? heeprom->PageBase0 : heeprom->PageBase1;
+    
+    // Mark new page as receive
+    FLASH_Unlock();
+    flashStatus = FLASH_ProgramHalfWord(newPage, EEPROM_RECEIVE_DATA);
+    if (flashStatus != FLASH_COMPLETE) {
+        FLASH_Lock();
+        return EEPROM_FLASH_ERROR;
+    }
+    
+    // Write new variable
+    flashStatus = FLASH_ProgramHalfWord(newPage + 4, Data);
+    if (flashStatus != FLASH_COMPLETE) {
+        FLASH_Lock();
+        return EEPROM_FLASH_ERROR;
+    }
+    
+    flashStatus = FLASH_ProgramHalfWord(newPage + 6, Address);
+    FLASH_Lock();
+    
+    if (flashStatus != FLASH_COMPLETE)
+        return EEPROM_FLASH_ERROR;
+    
+    return EE_PageTransfer(heeprom, newPage, pageBase, Address);
 }
 
-uint8_t EEPROM_varExists(uint8_t id) {
-    return eeprom_varExists(&legacy_device, id) ? 1 : 0;
+/* ==================== Public API ==================== */
+
+/**
+  * @brief  Initialize EEPROM emulation
+  * @param  heeprom: EEPROM handle
+  * @retval EEPROM_OK or error code
+  */
+uint16_t EEPROM_Init(EEPROM_HandleTypeDef *heeprom) {
+    uint16_t status0, status1;
+    FLASH_Status flashStatus;
+    
+    if (!heeprom)
+        return EEPROM_BAD_ADDRESS;
+    
+    heeprom->Status = EEPROM_NO_VALID_PAGE;
+    
+    status0 = (*(__IO uint16_t*)heeprom->PageBase0);
+    status1 = (*(__IO uint16_t*)heeprom->PageBase1);
+    
+    switch (status0) {
+        case EEPROM_ERASED:
+            if (status1 == EEPROM_VALID_PAGE) {
+                heeprom->Status = EE_CheckErasePage(heeprom->PageBase0, EEPROM_ERASED, heeprom->PageSize);
+            } else if (status1 == EEPROM_RECEIVE_DATA) {
+                FLASH_Unlock();
+                flashStatus = FLASH_ProgramHalfWord(heeprom->PageBase1, EEPROM_VALID_PAGE);
+                FLASH_Lock();
+                heeprom->Status = (flashStatus == FLASH_COMPLETE) ? 
+                    EE_CheckErasePage(heeprom->PageBase0, EEPROM_ERASED, heeprom->PageSize) : EEPROM_FLASH_ERROR;
+            } else if (status1 == EEPROM_ERASED) {
+                heeprom->Status = EEPROM_Format(heeprom);
+            }
+            break;
+            
+        case EEPROM_RECEIVE_DATA:
+            if (status1 == EEPROM_VALID_PAGE) {
+                heeprom->Status = EE_PageTransfer(heeprom, heeprom->PageBase0, heeprom->PageBase1, 0xFFFF);
+            } else if (status1 == EEPROM_ERASED) {
+                heeprom->Status = EE_CheckErasePage(heeprom->PageBase1, EEPROM_ERASED, heeprom->PageSize);
+                if (heeprom->Status == EEPROM_OK) {
+                    FLASH_Unlock();
+                    flashStatus = FLASH_ProgramHalfWord(heeprom->PageBase0, EEPROM_VALID_PAGE);
+                    FLASH_Lock();
+                    heeprom->Status = (flashStatus == FLASH_COMPLETE) ? EEPROM_OK : EEPROM_FLASH_ERROR;
+                }
+            }
+            break;
+            
+        case EEPROM_VALID_PAGE:
+            if (status1 == EEPROM_VALID_PAGE) {
+                heeprom->Status = EEPROM_NO_VALID_PAGE;
+            } else if (status1 == EEPROM_RECEIVE_DATA) {
+                heeprom->Status = EE_PageTransfer(heeprom, heeprom->PageBase1, heeprom->PageBase0, 0xFFFF);
+            } else {
+                heeprom->Status = EE_CheckErasePage(heeprom->PageBase1, EEPROM_ERASED, heeprom->PageSize);
+            }
+            break;
+            
+        default:
+            if (status1 == EEPROM_VALID_PAGE) {
+                heeprom->Status = EE_CheckErasePage(heeprom->PageBase0, EEPROM_ERASED, heeprom->PageSize);
+            } else if (status1 == EEPROM_RECEIVE_DATA) {
+                FLASH_Unlock();
+                flashStatus = FLASH_ProgramHalfWord(heeprom->PageBase1, EEPROM_VALID_PAGE);
+                FLASH_Lock();
+                heeprom->Status = (flashStatus == FLASH_COMPLETE) ? 
+                    EE_CheckErasePage(heeprom->PageBase0, EEPROM_ERASED, heeprom->PageSize) : EEPROM_FLASH_ERROR;
+            }
+            break;
+    }
+    
+    return heeprom->Status;
 }
 
-uint8_t EEPROM_deleteVar(uint8_t id) {
-    return eeprom_deleteVar(&legacy_device, id);
+/**
+  * @brief  Format EEPROM (erase both pages)
+  * @param  heeprom: EEPROM handle
+  * @retval EEPROM_OK or error code
+  */
+uint16_t EEPROM_Format(EEPROM_HandleTypeDef *heeprom) {
+    FLASH_Status flashStatus;
+    uint16_t status;
+    
+    if (!heeprom)
+        return EEPROM_BAD_ADDRESS;
+    
+    // Erase Page0
+    status = EE_CheckErasePage(heeprom->PageBase0, EEPROM_VALID_PAGE, heeprom->PageSize);
+    if (status != EEPROM_OK)
+        return status;
+    
+    // Mark Page0 as valid
+    if ((*(__IO uint16_t*)heeprom->PageBase0) == EEPROM_ERASED) {
+        FLASH_Unlock();
+        flashStatus = FLASH_ProgramHalfWord(heeprom->PageBase0, EEPROM_VALID_PAGE);
+        FLASH_Lock();
+        if (flashStatus != FLASH_COMPLETE)
+            return EEPROM_FLASH_ERROR;
+    }
+    
+    // Erase Page1
+    return EE_CheckErasePage(heeprom->PageBase1, EEPROM_ERASED, heeprom->PageSize);
 }
 
-uint8_t EEPROM_compact(void) {
-    return eeprom_compact(&legacy_device);
+/**
+  * @brief  Read variable from EEPROM
+  * @param  heeprom: EEPROM handle
+  * @param  Address: variable address
+  * @param  Data: pointer to data
+  * @retval EEPROM_OK or error code
+  */
+uint16_t EEPROM_Read(EEPROM_HandleTypeDef *heeprom, uint16_t Address, uint16_t *Data) {
+    uint32_t pageBase, pageEnd;
+    
+    if (!heeprom || !Data)
+        return EEPROM_BAD_ADDRESS;
+    
+    *Data = EEPROM_DEFAULT_DATA;
+    
+    if (heeprom->Status == EEPROM_NOT_INIT) {
+        if (EEPROM_Init(heeprom) != EEPROM_OK)
+            return heeprom->Status;
+    }
+    
+    pageBase = EE_FindValidPage(heeprom);
+    if (pageBase == 0)
+        return EEPROM_NO_VALID_PAGE;
+    
+    pageEnd = pageBase + heeprom->PageSize - 2;
+    
+    // Search from end to beginning (newest first)
+    for (uint32_t addr = pageEnd; addr >= pageBase + 6; addr -= 4) {
+        if ((*(__IO uint16_t*)addr) == Address) {
+            *Data = (*(__IO uint16_t*)(addr - 2));
+            return EEPROM_OK;
+        }
+    }
+    
+    return EEPROM_BAD_ADDRESS;
+}
+
+/**
+  * @brief  Write variable to EEPROM
+  * @param  heeprom: EEPROM handle
+  * @param  Address: variable address
+  * @param  Data: variable data
+  * @retval EEPROM_OK or error code
+  */
+uint16_t EEPROM_Write(EEPROM_HandleTypeDef *heeprom, uint16_t Address, uint16_t Data) {
+    if (!heeprom)
+        return EEPROM_BAD_ADDRESS;
+    
+    if (heeprom->Status == EEPROM_NOT_INIT) {
+        if (EEPROM_Init(heeprom) != EEPROM_OK)
+            return heeprom->Status;
+    }
+    
+    if (Address == 0xFFFF)
+        return EEPROM_BAD_ADDRESS;
+    
+    return EE_VerifyPageFullWriteVariable(heeprom, Address, Data);
+}
+
+/**
+  * @brief  Update variable (write only if different)
+  * @param  heeprom: EEPROM handle
+  * @param  Address: variable address
+  * @param  Data: variable data
+  * @retval EEPROM_OK, EEPROM_SAME_VALUE, or error code
+  */
+uint16_t EEPROM_Update(EEPROM_HandleTypeDef *heeprom, uint16_t Address, uint16_t Data) {
+    uint16_t currentData;
+    uint16_t status;
+    
+    status = EEPROM_Read(heeprom, Address, &currentData);
+    if (status == EEPROM_OK && currentData == Data)
+        return EEPROM_SAME_VALUE;
+    
+    return EEPROM_Write(heeprom, Address, Data);
+}
+
+/**
+  * @brief  Count variables in EEPROM
+  * @param  heeprom: EEPROM handle
+  * @param  Count: pointer to count
+  * @retval EEPROM_OK or error code
+  */
+uint16_t EEPROM_Count(EEPROM_HandleTypeDef *heeprom, uint16_t *Count) {
+    uint32_t pageBase;
+    
+    if (!heeprom || !Count)
+        return EEPROM_BAD_ADDRESS;
+    
+    if (heeprom->Status == EEPROM_NOT_INIT) {
+        if (EEPROM_Init(heeprom) != EEPROM_OK)
+            return heeprom->Status;
+    }
+    
+    pageBase = EE_FindValidPage(heeprom);
+    if (pageBase == 0)
+        return EEPROM_NO_VALID_PAGE;
+    
+    *Count = EE_GetVariablesCount(pageBase, 0xFFFF, heeprom->PageSize);
+    return EEPROM_OK;
+}
+
+/**
+  * @brief  Get maximum variable count
+  * @param  heeprom: EEPROM handle
+  * @retval Maximum count
+  */
+uint16_t EEPROM_MaxCount(EEPROM_HandleTypeDef *heeprom) {
+    if (!heeprom)
+        return 0;
+    return (heeprom->PageSize / 4) - 1;
+}
+
+/**
+  * @brief  Get erase counter
+  * @param  heeprom: EEPROM handle
+  * @param  Erases: pointer to erase count
+  * @retval EEPROM_OK or error code
+  */
+uint16_t EEPROM_Erases(EEPROM_HandleTypeDef *heeprom, uint16_t *Erases) {
+    uint32_t pageBase;
+    
+    if (!heeprom || !Erases)
+        return EEPROM_BAD_ADDRESS;
+    
+    if (heeprom->Status == EEPROM_NOT_INIT) {
+        if (EEPROM_Init(heeprom) != EEPROM_OK)
+            return heeprom->Status;
+    }
+    
+    pageBase = EE_FindValidPage(heeprom);
+    if (pageBase == 0)
+        return EEPROM_NO_VALID_PAGE;
+    
+    *Erases = (*(__IO uint16_t*)(pageBase + 2));
+    return EEPROM_OK;
 }

@@ -1,5 +1,4 @@
-User/EEPROM.o: ../User/EEPROM.c ../User/EEPROM.h \
- f:/CH32V003_MotorControl/SRC/Debug/debug.h \
+User/EEPROM.o: ../User/EEPROM.c ../User/eeprom_ch32v.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/SRC/Core/core_riscv.h \
  f:/CH32V003_MotorControl/User/system_ch32v00x.h \
@@ -12,6 +11,8 @@ User/EEPROM.o: ../User/EEPROM.c ../User/EEPROM.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_gpio.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h \
  f:/CH32V003_MotorControl/User/ch32v00x_it.h \
+ f:/CH32V003_MotorControl/SRC/Debug/debug.h \
+ f:/CH32V003_MotorControl/User/buzzer_tunes.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_misc.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_pwr.h \
@@ -21,12 +22,9 @@ User/EEPROM.o: ../User/EEPROM.c ../User/EEPROM.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_usart.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_wwdg.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
- f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
- f:/CH32V003_MotorControl/User/buzzer_tunes.h
+ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h
 
-../User/EEPROM.h:
-
-f:/CH32V003_MotorControl/SRC/Debug/debug.h:
+../User/eeprom_ch32v.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
 
@@ -52,6 +50,10 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_i2c.h:
 
 f:/CH32V003_MotorControl/User/ch32v00x_it.h:
 
+f:/CH32V003_MotorControl/SRC/Debug/debug.h:
+
+f:/CH32V003_MotorControl/User/buzzer_tunes.h:
+
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_iwdg.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_misc.h:
@@ -71,5 +73,3 @@ f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_wwdg.h:
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h:
 
 f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h:
-
-f:/CH32V003_MotorControl/User/buzzer_tunes.h:

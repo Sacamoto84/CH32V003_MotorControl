@@ -59,14 +59,24 @@
 				"name": "pwm.cpp"
 			},
 			{
-				"name": "ws2812b_driver.c",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "ws2812b_driver.c"
 			},
 			{
-				"name": "ws2812b_driver.h",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "ws2812b_driver.h"
+			},
+			{
+				"parentLogicPath": "User",
+				"type": "file",
+				"name": "flash_stm32.c"
+			},
+			{
+				"parentLogicPath": "User",
+				"type": "file",
+				"name": "flash_stm32.h"
 			}
 		],
 		"projectName": "Standby_Mode",
@@ -89,7 +99,9 @@
 				"post_script": "",
 				"post_script_description": "",
 				"excludeResources": [
-					"${project}/SRC"
+					"${project}/SRC",
+					"${project}/User/EEPROM1.c",
+					"${project}/User/EEPROM1.h"
 				],
 				"optimization": {
 					"level": "size",
@@ -368,7 +380,7 @@
 		"mcutype": "CH32V00x",
 		"address": "0x08000000",
 		"target_path": "obj\\Standby_Mode.hex",
-		"clkSpeed": "High",
+		"clkSpeed": "Low",
 		"debug_interface_mode": "1-wire serial",
 		"erase": false,
 		"program": true,
