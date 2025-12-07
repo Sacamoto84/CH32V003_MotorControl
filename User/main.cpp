@@ -83,14 +83,14 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
     // Читаем boostEnable
     // Проверка существования переменной
-    uint32_t temp = EEPROM_readVar (id);
+    uint32_t temp = EEPROM_readByte (id);
     // printf ("temp: %d\n", temp);
     if (temp == -1) {
         // Переменной нет
         printf ("EEPROM id:%d ! Not Present !\r\n", id);
-        uint16_t res = EEPROM_saveVar (id, def);  // Сохранить по умолчанию 0
+        uint16_t res = EEPROM_saveByte (id, def);  // Сохранить по умолчанию 0
         printf ("EEPROM Save code:%d\n", res);
-        uint16_t test = EEPROM_readVar (id);
+        uint16_t test = EEPROM_readByte (id);
         printf ("EEPROM Verification id:%d Value: %d\r\n", id, test);
         *value = def;
     } else {
@@ -101,13 +101,19 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
 void userEEPROM() {
     EEPROM_init();
-    printf ("EEPROM Demo Free: %d\r\n", get_free_space());
+    EEPROM_Dev eeprom;
+    eeprom_init(&eeprom, EEPROM_ADDRESS);
+    // Статус
+    uint16_t used_vars, free_space;
+    eeprom_getStatus (&eeprom, &used_vars, &free_space);
+    printf ("Variables: %d, Free space: %d bytes\r\n", used_vars, free_space);
+
     printf (".READ CONFIG Boost Enable\r\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);
     printf (".READ CONFIG Boost Time\r\n");
     userInitVarEEPROM (2, &configBoostTime, 200);
     printf (".READ CONFIG Power\r\n");
-    userInitVarEEPROM (3, &configCurrentPower, 40);
+    userInitVarEEPROM (3, &configCurrentPower, 50);
 }
 
 int main (void) {
@@ -152,9 +158,45 @@ int main (void) {
     SysTick->CTLR = 0xb;
 
     pwm.init (100, 9, 0);
-    pwm.setDuty(0);
+    pwm.setDuty (0);
     pwm.disable();
-    
+
+
+    // Восходящая трель - "данные сохранены"
+    // Двойной тон с акцентом на втором
+    tone1_vol (1000, 40, 70);
+    tone1_vol (1500, 80, 100);
+
+    // tone1_vol (800, 30, 60);
+    // tone1_vol (1000, 30, 70);
+    // delay (1000);
+
+    //  tone1_vol(1500, 80, 90);
+    // delay(40);
+    // tone1_vol(1500, 80, 90);
+    // delay(40);
+    // tone1_vol(1200, 100, 70);  // Отскок назад
+
+    // // Звук "меньше нельзя"
+    // tone1_vol(800, 80, 90);
+    // delay(40);
+    // tone1_vol(800, 80, 90);
+    // delay(40);
+    // tone1_vol(1000, 100, 70);  // Отскок назад
+
+
+    tone1_vol (1200, 40, 80);
+    tone1_vol (1000, 40, 70);
+    delay (50);
+    tone1_vol (1500, 80, 100);  // Сохранено!
+
+
+    // tone1_vol (1000, 20, 50);
+    // tone1_vol (1200, 25, 60);
+    // delay (1000);
+    // tone1_vol (600, 25, 60);
+    // tone1_vol (900, 25, 75);
+    // tone1_vol (1200, 40, 90);
 
     // --- СЛУЖЕБНЫЕ ЗВУКИ ---
     // buzzer_ok();
@@ -226,6 +268,7 @@ int main (void) {
 
 
         if (comandMotorOn) {
+            pwm.setDuty (configCurrentPower);
             pwm.enable();
             LED_ON;
         } else {

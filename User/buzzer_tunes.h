@@ -69,8 +69,9 @@ extern void buzzer_button_hold(void);
 
 
 
-
-
+extern void beep_Increment_Max(void);
+extern void beep_Decrement_Min(void);
+extern void beep_Save(void);
 
 
 

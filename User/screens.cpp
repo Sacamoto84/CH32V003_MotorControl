@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "uButton.h"
+#include "EEPROM.h"
 
 extern uButton b;
 extern Screen screen;
@@ -122,10 +123,13 @@ void ScreenPower() {
         printf ("ScreenPower Clicks: %d\r\n", b.getClicks());
 
         if (b.getClicks() == 1) {
-            buzzer_click();
             imp++;
-            if (imp > 20)
+            if (imp > 20) {
                 imp = 20;
+                beep_Increment_Max();
+            } else {
+                buzzer_click();
+            }
             configCurrentPower = imp * 5;
             printf ("++ Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
@@ -138,9 +142,13 @@ void ScreenPower() {
         }
 
         if (b.getClicks() == 3) {
-            buzzer_click();
-            if (imp > 1)
+
+            if (imp > 1) {
                 imp--;
+                buzzer_click();
+            } else {
+                beep_Decrement_Min();
+            }
             configCurrentPower = imp * 5;
             printf ("-- Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
@@ -159,9 +167,17 @@ void ScreenPower() {
 
         // Save
         if (b.getClicks() == 5) {
-            printf ("Save\r\n");
-            //Сохраняем реальную мощность configCurrentPower
+
+            // Сохраняем реальную мощность configCurrentPower
+            beep_Save();
+            beep_Save();
+            uint16_t i = (uint16_t)(100);
+            int res = EEPROM_saveByte (3, 100);
+            printf ("Save res:%d\r\n", res);
+            uint16_t test = EEPROM_readByte (3);
+            printf ("Save resd 3 res:%d\r\n", test);
         }
+
     }
 }
 
