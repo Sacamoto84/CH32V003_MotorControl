@@ -10,10 +10,10 @@
 extern uButton b;
 extern Screen screen;
 
-extern uEeprom eeprom_power();
-extern uEeprom eeprom_boostEnable();
-extern uEeprom eeprom_boostPower();
-extern uEeprom eeprom_boostTime();
+extern uEeprom eeprom_power;
+extern uEeprom eeprom_boostEnable;
+extern uEeprom eeprom_boostPower;
+extern uEeprom eeprom_boostTime;
 
 void status (int step);
 void exit (void);
@@ -43,13 +43,6 @@ void ScreenNormal (void) {
     if (b.click()) {
         printf ("Click\r\n");
         buzzer_ios_click();
-
-        for (int i = 0; i < 128; i++) {
-            uint16_t res = EE_WriteVariable (4, i);
-            if (res != FLASH_COMPLETE) {
-                printf ("EEPROM Ошибка записи %d\n", res);
-            }
-        }
 
         if (comandMotorOn)
             comandMotorOn = 0;
@@ -190,19 +183,18 @@ void ScreenPower() {
             beep_Save();
 
 
-    
             // uint16_t res = EE_WriteVariable (3, (uint16_t)(100));
             // printf ("Save res:%d\r\n", res);
             // uint16_t temp;
             // res = EE_ReadVariable (3, &temp);
-            //printf ("Save id:3 res:%d value:%d\r\n", res, temp);
+            // printf ("Save id:3 res:%d value:%d\r\n", res, temp);
         }
     }
 }
 
 void ScreenBoostEnable (void) {
 
-    if (configBoostEnable)
+    if (eeprom_boostEnable.get())
         LED_ON;
     else
         LED_OFF;
@@ -211,10 +203,12 @@ void ScreenBoostEnable (void) {
         printf ("Clicks: %d\r\n", b.getClicks());
 
         if (b.getClicks() == 1) {
-            if (configBoostEnable)
-                configBoostEnable = 0;
+
+            if (eeprom_boostEnable.get())
+                eeprom_boostEnable.set (0);
             else
-                configBoostEnable = 1;
+                eeprom_boostEnable.set (1);
+
             buzzer_ok();
         }
         if (b.getClicks() == 2) {

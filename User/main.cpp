@@ -26,11 +26,11 @@
 
 uButton b;
 Pwm pwm;
- 
-uEeprom eeprom_power(0, 0, 100, 50);       // Мощность мотора
-uEeprom eeprom_boostEnable(1, 0, 1, 0);    // Настройка того что будет использоваться буст
-uEeprom eeprom_boostPower(2, 0, 100, 10);  // 
-uEeprom eeprom_boostTime(3, 0, 100, 100);  // Время буста в ms
+
+uEeprom eeprom_power;              // Мощность мотора
+uEeprom eeprom_boostEnable;        // Настройка того что будет использоваться буст
+uEeprom eeprom_boostPower;         //
+uEeprom eeprom_boostTime;          // Время буста в ms
 
 uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
 uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
@@ -85,34 +85,26 @@ void EXTI_INT_INIT (void) {
     EXTI_Init (&EXTI_InitStructure);
 }
 
-void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
-
-    uint16_t res = EE_ReadVariable (id, &temp);
-
-    // printf ("temp: %d\n", temp);
-    if (res != 0) {
-        // Переменной нет
-        printf ("EEPROM id:%d ! Not Present !\r\n", id);
-        res = EE_WriteVariable (id, def);  // Сохранить по умолчанию 0
-        printf ("EEPROM Save code:%d\n", res);
-        res = EE_ReadVariable (id, &temp);
-        printf ("EEPROM Verification id:%d Value: %d code:%d\r\n", id, temp, res);
-        *value = def;
-    } else {
-        printf ("EEPROM id:%d Value:%d\r\n", id, temp);
-        *value = temp;
-    }
-}
-
 void userEEPROM() {
 
-    printf (".READ CONFIG Boost Enable\r\n");
-    userInitVarEEPROM (1, &configBoostEnable, 0);
-    printf (".READ CONFIG Boost Time\r\n");
-    userInitVarEEPROM (2, &configBoostTime, 200);
-    printf (".READ CONFIG Power\r\n");
-    userInitVarEEPROM (3, &configCurrentPower, 50);
 
+    // uEeprom eeprom_power (0, 0, 100, 50, (char*)"power");          // Мощность мотора
+    // uEeprom eeprom_boostEnable (1, 0, 1, 0, (char*)"B Enable");    // Настройка того что будет использоваться буст
+    // uEeprom eeprom_boostPower (2, 0, 100, 10, (char *)"B Power");  //
+    // uEeprom eeprom_boostTime (3, 0, 100, 100, (char *)"B Time");   // Время буста в ms
+
+    printf (".READ CONFIG Power\n");
+    eeprom_power.init (0, 0, 100, 50, (char *)"Power");
+
+    printf (".READ CONFIG Boost Enable\n");
+    eeprom_boostEnable.init (1, 0, 1, 0, (char *)"B Enable");
+
+    printf (".READ CONFIG Boost Power\n");
+    eeprom_boostPower.init (2, 0, 100, 10, (char *)"B Power");
+
+
+    printf (".READ CONFIG Boost Time\n");
+    eeprom_boostTime.init (3, 0, 100, 100, (char *)"B Time");
 }
 
 int main (void) {
@@ -134,9 +126,11 @@ int main (void) {
 
     //----
     printf ("-------------------------\r\n");
-    printf ("CONFIG Boost Enable : %d\r\n", configBoostEnable);
-    printf ("CONFIG Boost Time   : %d ms\r\n", configBoostTime);
-    printf ("CONFIG Power        : %d\r\n", configCurrentPower);
+    printf ("CONFIG Power        : %d\r\n", eeprom_power.get());
+    printf ("CONFIG Boost Enable : %d\r\n", eeprom_boostEnable.get());
+    printf ("CONFIG Boost Power   : %d ms\r\n", eeprom_boostPower.get());
+    printf ("CONFIG Boost Time   : %d ms\r\n", eeprom_boostTime.get());
+
     printf ("-------------------------\r\n");
     //----
 
