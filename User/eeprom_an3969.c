@@ -1,519 +1,738 @@
-
 #include "eeprom.h"
 #include "ch32v00x_flash.h"
 
-/* Global variable used to store variable value in read sequence */
+/* Глобальная переменная для хранения значения переменной при чтении */
 uint16_t DataVar = 0;
 
-/* Virtual address defined by the user: 0xFFFF value is prohibited */
+/* Таблица виртуальных адресов, определяемая пользователем: значение 0xFFFF запрещено */
 uint16_t VirtAddVarTab[NB_OF_VAR];
 
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
+/* Прототипы приватных функций -----------------------------------------------*/
 static FLASH_Status EE_Format (void);
 static uint16_t EE_FindValidPage (uint8_t Operation);
 static uint16_t EE_VerifyPageFullWriteVariable (uint16_t VirtAddress, uint16_t Data);
 static uint16_t EE_PageTransfer (uint16_t VirtAddress, uint16_t Data);
 
+/**
+ * @brief  Стирание сектора Flash-памяти
+ * @param  page_id: Идентификатор страницы (PAGE0_ID или PAGE1_ID)
+ * @retval Статус операции стирания Flash
+ */
 uint16_t FLASH_EraseSector (int page_id) {
-    FLASH_Unlock();
-    EEPROM_LOG ("⏳ Erasing...");
-    uint32_t base;
-    if (page_id == PAGE0_ID)
-        base = PAGE0_BASE_ADDRESS;
-    else
-        base = PAGE1_BASE_ADDRESS;
+    EEPROM_LOG_ERASE_MSG ("========================================");
+    EEPROM_LOG_ERASE_MSG ("Начало стирания сектора, ID страницы: %d", page_id);
 
-    FLASH_Status status = FLASH_ErasePage (base);
-    if (status != FLASH_COMPLETE) {
-        EEPROM_LOG ("⏳ Erasing...ERROR");
+    FLASH_Unlock();
+
+    uint32_t base;
+    if (page_id == PAGE0_ID) {
+        base = PAGE0_BASE_ADDRESS;
+        EEPROM_LOG_ERASE_MSG ("Выбрана PAGE0, адрес: 0x%08X", base);
+    } else {
+        base = PAGE1_BASE_ADDRESS;
+        EEPROM_LOG_ERASE_MSG ("Выбрана PAGE1, адрес: 0x%08X", base);
     }
-    EEPROM_LOG ("⏳ Erasing...OK");
+
+    EEPROM_LOG_ERASE_MSG ("⏳ Выполняется стирание...");
+    FLASH_Status status = FLASH_ErasePage (base);
+
+    if (status != FLASH_COMPLETE) {
+        EEPROM_LOG_ERASE_MSG ("❌ ОШИБКА стирания! Код статуса: %d", status);
+    } else {
+        EEPROM_LOG_ERASE_MSG ("✓ Стирание завершено успешно");
+    }
+
     FLASH_Lock();
+    EEPROM_LOG_ERASE_MSG ("========================================");
+
+    return status;
 }
 
 /**
- * @brief  Restore the pages to a known good state in case of page's status
- *   corruption after a power loss.
- * @param  None.
- * @retval - Flash error code: on write Flash error
- *         - FLASH_COMPLETE: on success
+ * @brief  Восстановление страниц в известное корректное состояние в случае
+ *         повреждения статуса страниц после потери питания.
+ * @param  Нет параметров
+ * @retval - Код ошибки Flash: при ошибке записи во Flash
+ *         - FLASH_COMPLETE: при успехе
  */
 uint16_t EE_Init (void) {
+    EEPROM_LOG_INIT_MSG ("╔════════════════════════════════════════╗");
+    EEPROM_LOG_INIT_MSG ("║   ИНИЦИАЛИЗАЦИЯ ЭМУЛЯЦИИ EEPROM        ║");
+    EEPROM_LOG_INIT_MSG ("╚════════════════════════════════════════╝");
+
     uint16_t PageStatus0 = 6, PageStatus1 = 6;
     uint16_t VarIdx = 0;
     uint16_t EepromStatus = 0, ReadStatus = 0;
     int16_t x = -1;
     uint16_t FlashStatus;
 
-    /* Get Page0 status */
+    /* Получение статуса Page0 */
     PageStatus0 = (*(__IO uint16_t *)PAGE0_BASE_ADDRESS);
-    /* Get Page1 status */
-    PageStatus1 = (*(__IO uint16_t *)PAGE1_BASE_ADDRESS);
+    EEPROM_LOG_INIT_MSG ("Статус PAGE0 (0x%08X): 0x%04X", PAGE0_BASE_ADDRESS, PageStatus0);
 
-    /* Check for invalid header states and repair if necessary */
+    /* Получение статуса Page1 */
+    PageStatus1 = (*(__IO uint16_t *)PAGE1_BASE_ADDRESS);
+    EEPROM_LOG_INIT_MSG ("Статус PAGE1 (0x%08X): 0x%04X", PAGE1_BASE_ADDRESS, PageStatus1);
+
+    /* Проверка недопустимых состояний заголовков и восстановление при необходимости */
+    EEPROM_LOG_INIT_MSG ("----------------------------------------");
+    EEPROM_LOG_INIT_MSG ("Анализ состояний страниц...");
+
     switch (PageStatus0) {
     case ERASED:
-        if (PageStatus1 == VALID_PAGE) /* Page0 erased, Page1 valid */
-        {
-            /* Erase Page0 */
+        EEPROM_LOG_INIT_MSG ("PAGE0: ERASED (стерта)");
+
+        if (PageStatus1 == VALID_PAGE) {
+            EEPROM_LOG_INIT_MSG ("PAGE1: VALID_PAGE (валидна)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Page0 стерта, Page1 валидна");
+            EEPROM_LOG_INIT_MSG ("Действие: Стереть Page0 для очистки");
+
+            /* Стирание Page0 */
             FlashStatus = FLASH_EraseSector (PAGE0_ID);
-            /* If erase operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при стирании Page0!");
                 return FlashStatus;
             }
-        } else if (PageStatus1 == RECEIVE_DATA) /* Page0 erased, Page1 receive */
-        {
-            /* Erase Page0 */
+        } else if (PageStatus1 == RECEIVE_DATA) {
+            EEPROM_LOG_INIT_MSG ("PAGE1: RECEIVE_DATA (принимает данные)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Page0 стерта, Page1 принимает данные");
+            EEPROM_LOG_INIT_MSG ("Действие: Стереть Page0 и пометить Page1 как валидную");
+
+            /* Стирание Page0 */
             FlashStatus = FLASH_EraseSector (PAGE0_ID);
-            /* If erase operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при стирании Page0!");
                 return FlashStatus;
             }
-            /* Mark Page1 as valid */
+            /* Пометить Page1 как валидную */
+            EEPROM_LOG_INIT_MSG ("Запись статуса VALID_PAGE в Page1...");
+            FLASH_Unlock();
             FlashStatus = FLASH_ProgramHalfWord (PAGE1_BASE_ADDRESS, VALID_PAGE);
-            /* If program operation was failed, a Flash error code is returned */
+            FLASH_Lock();
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при записи статуса Page1!");
                 return FlashStatus;
             }
-        } else /* First EEPROM access (Page0&1 are erased) or invalid state -> format EEPROM */
-        {
-            /* Erase both Page0 and Page1 and set Page0 as valid page */
+            EEPROM_LOG_INIT_MSG ("✓ Page1 помечена как валидная");
+        } else {
+            EEPROM_LOG_INIT_MSG ("PAGE1: статус 0x%04X (некорректный)", PageStatus1);
+            EEPROM_LOG_INIT_MSG ("Сценарий: Первый доступ к EEPROM или недопустимое состояние");
+            EEPROM_LOG_INIT_MSG ("Действие: Форматирование EEPROM");
+
+            /* Стирание обеих страниц и установка Page0 как валидной */
             FlashStatus = EE_Format();
-            /* If erase/program operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при форматировании!");
                 return FlashStatus;
             }
         }
         break;
 
     case RECEIVE_DATA:
-        if (PageStatus1 == VALID_PAGE) /* Page0 receive, Page1 valid */
-        {
-            /* Transfer data from Page1 to Page0 */
+        EEPROM_LOG_INIT_MSG ("PAGE0: RECEIVE_DATA (принимает данные)");
+
+        if (PageStatus1 == VALID_PAGE) {
+            EEPROM_LOG_INIT_MSG ("PAGE1: VALID_PAGE (валидна)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Page0 принимает данные, Page1 валидна");
+            EEPROM_LOG_INIT_MSG ("Действие: Перенос данных из Page1 в Page0");
+
+            /* Перенос данных из Page1 в Page0 */
+            EEPROM_LOG_INIT_MSG ("Начало переноса переменных (всего: %d)...", NB_OF_VAR);
             for (VarIdx = 0; VarIdx < NB_OF_VAR; VarIdx++) {
                 if ((*(__IO uint16_t *)(PAGE0_BASE_ADDRESS + 6)) == VirtAddVarTab[VarIdx]) {
                     x = VarIdx;
+                    EEPROM_LOG_INIT_MSG ("Переменная %d уже записана в Page0, пропуск", VarIdx);
                 }
                 if (VarIdx != x) {
-                    /* Read the last variables' updates */
+                    EEPROM_LOG_INIT_MSG ("Перенос переменной %d (VirtAddr: 0x%04X)...", VarIdx, VirtAddVarTab[VarIdx]);
+                    /* Чтение последних обновлений переменных */
                     ReadStatus = EE_ReadVariable (VirtAddVarTab[VarIdx], &DataVar);
-                    /* In case variable corresponding to the virtual address was found */
+                    /* Если переменная, соответствующая виртуальному адресу, была найдена */
                     if (ReadStatus != 0x1) {
-                        /* Transfer the variable to the Page0 */
+                        EEPROM_LOG_INIT_MSG ("  Найдена, значение: 0x%04X", DataVar);
+                        /* Перенос переменной в Page0 */
                         EepromStatus = EE_VerifyPageFullWriteVariable (VirtAddVarTab[VarIdx], DataVar);
-                        /* If program operation was failed, a Flash error code is returned */
                         if (EepromStatus != FLASH_COMPLETE) {
+                            EEPROM_LOG_INIT_MSG ("❌ Ошибка при переносе переменной %d!", VarIdx);
                             return EepromStatus;
                         }
+                        EEPROM_LOG_INIT_MSG ("  ✓ Переменная перенесена");
+                    } else {
+                        EEPROM_LOG_INIT_MSG ("  Переменная не найдена, пропуск");
                     }
                 }
             }
-            /* Mark Page0 as valid */
+            /* Пометить Page0 как валидную */
+            EEPROM_LOG_INIT_MSG ("Запись статуса VALID_PAGE в Page0...");
+            FLASH_Unlock();
             FlashStatus = FLASH_ProgramHalfWord (PAGE0_BASE_ADDRESS, VALID_PAGE);
-            /* If program operation was failed, a Flash error code is returned */
+            FLASH_Lock();
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при записи статуса Page0!");
                 return FlashStatus;
             }
-            /* Erase Page1 */
+            EEPROM_LOG_INIT_MSG ("✓ Page0 помечена как валидная");
+
+            /* Стирание Page1 */
+            EEPROM_LOG_INIT_MSG ("Стирание Page1...");
             FlashStatus = FLASH_EraseSector (PAGE1_ID);
-            /* If erase operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при стирании Page1!");
                 return FlashStatus;
             }
-        } else if (PageStatus1 == ERASED) /* Page0 receive, Page1 erased */
-        {
-            /* Erase Page1 */
+        } else if (PageStatus1 == ERASED) {
+            EEPROM_LOG_INIT_MSG ("PAGE1: ERASED (стерта)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Page0 принимает данные, Page1 стерта");
+            EEPROM_LOG_INIT_MSG ("Действие: Очистить Page1 и пометить Page0 как валидную");
+
+            /* Стирание Page1 */
             FlashStatus = FLASH_EraseSector (PAGE1_ID);
-            /* If erase operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при стирании Page1!");
                 return FlashStatus;
             }
-            /* Mark Page0 as valid */
+            /* Пометить Page0 как валидную */
+            EEPROM_LOG_INIT_MSG ("Запись статуса VALID_PAGE в Page0...");
+            FLASH_Unlock();
             FlashStatus = FLASH_ProgramHalfWord (PAGE0_BASE_ADDRESS, VALID_PAGE);
-            /* If program operation was failed, a Flash error code is returned */
+            FLASH_Lock();
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при записи статуса Page0!");
                 return FlashStatus;
             }
-        } else /* Invalid state -> format eeprom */
-        {
-            /* Erase both Page0 and Page1 and set Page0 as valid page */
+            EEPROM_LOG_INIT_MSG ("✓ Page0 помечена как валидная");
+        } else {
+            EEPROM_LOG_INIT_MSG ("PAGE1: статус 0x%04X (некорректный)", PageStatus1);
+            EEPROM_LOG_INIT_MSG ("Сценарий: Недопустимое состояние");
+            EEPROM_LOG_INIT_MSG ("Действие: Форматирование EEPROM");
+
+            /* Стирание обеих страниц и установка Page0 как валидной */
             FlashStatus = EE_Format();
-            /* If erase/program operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при форматировании!");
                 return FlashStatus;
             }
         }
         break;
 
     case VALID_PAGE:
-        if (PageStatus1 == VALID_PAGE) /* Invalid state -> format eeprom */
-        {
-            /* Erase both Page0 and Page1 and set Page0 as valid page */
+        EEPROM_LOG_INIT_MSG ("PAGE0: VALID_PAGE (валидна)");
+
+        if (PageStatus1 == VALID_PAGE) {
+            EEPROM_LOG_INIT_MSG ("PAGE1: VALID_PAGE (валидна)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Обе страницы валидны (недопустимое состояние!)");
+            EEPROM_LOG_INIT_MSG ("Действие: Форматирование EEPROM");
+
+            /* Стирание обеих страниц и установка Page0 как валидной */
             FlashStatus = EE_Format();
-            /* If erase/program operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при форматировании!");
                 return FlashStatus;
             }
-        } else if (PageStatus1 == ERASED) /* Page0 valid, Page1 erased */
-        {
-            /* Erase Page1 */
+        } else if (PageStatus1 == ERASED) {
+            EEPROM_LOG_INIT_MSG ("PAGE1: ERASED (стерта)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Page0 валидна, Page1 стерта");
+            EEPROM_LOG_INIT_MSG ("Действие: Очистить Page1");
+
+            /* Стирание Page1 */
             FlashStatus = FLASH_EraseSector (PAGE1_ID);
-            /* If erase operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при стирании Page1!");
                 return FlashStatus;
             }
-        } else /* Page0 valid, Page1 receive */
-        {
-            /* Transfer data from Page0 to Page1 */
+        } else {
+            EEPROM_LOG_INIT_MSG ("PAGE1: RECEIVE_DATA (принимает данные)");
+            EEPROM_LOG_INIT_MSG ("Сценарий: Page0 валидна, Page1 принимает данные");
+            EEPROM_LOG_INIT_MSG ("Действие: Перенос данных из Page0 в Page1");
+
+            /* Перенос данных из Page0 в Page1 */
+            EEPROM_LOG_INIT_MSG ("Начало переноса переменных (всего: %d)...", NB_OF_VAR);
             for (VarIdx = 0; VarIdx < NB_OF_VAR; VarIdx++) {
                 if ((*(__IO uint16_t *)(PAGE1_BASE_ADDRESS + 6)) == VirtAddVarTab[VarIdx]) {
                     x = VarIdx;
+                    EEPROM_LOG_INIT_MSG ("Переменная %d уже записана в Page1, пропуск", VarIdx);
                 }
                 if (VarIdx != x) {
-                    /* Read the last variables' updates */
+                    EEPROM_LOG_INIT_MSG ("Перенос переменной %d (VirtAddr: 0x%04X)...", VarIdx, VirtAddVarTab[VarIdx]);
+                    /* Чтение последних обновлений переменных */
                     ReadStatus = EE_ReadVariable (VirtAddVarTab[VarIdx], &DataVar);
-                    /* In case variable corresponding to the virtual address was found */
+                    /* Если переменная, соответствующая виртуальному адресу, была найдена */
                     if (ReadStatus != 0x1) {
-                        /* Transfer the variable to the Page1 */
+                        EEPROM_LOG_INIT_MSG ("  Найдена, значение: 0x%04X", DataVar);
+                        /* Перенос переменной в Page1 */
                         EepromStatus = EE_VerifyPageFullWriteVariable (VirtAddVarTab[VarIdx], DataVar);
-                        /* If program operation was failed, a Flash error code is returned */
                         if (EepromStatus != FLASH_COMPLETE) {
+                            EEPROM_LOG_INIT_MSG ("❌ Ошибка при переносе переменной %d!", VarIdx);
                             return EepromStatus;
                         }
+                        EEPROM_LOG_INIT_MSG ("  ✓ Переменная перенесена");
+                    } else {
+                        EEPROM_LOG_INIT_MSG ("  Переменная не найдена, пропуск");
                     }
                 }
             }
-            /* Mark Page1 as valid */
+            /* Пометить Page1 как валидную */
+            EEPROM_LOG_INIT_MSG ("Запись статуса VALID_PAGE в Page1...");
+            FLASH_Unlock();
             FlashStatus = FLASH_ProgramHalfWord (PAGE1_BASE_ADDRESS, VALID_PAGE);
-            /* If program operation was failed, a Flash error code is returned */
+            FLASH_Lock();
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при записи статуса Page1!");
                 return FlashStatus;
             }
-            /* Erase Page0 */
+            EEPROM_LOG_INIT_MSG ("✓ Page1 помечена как валидная");
+
+            /* Стирание Page0 */
+            EEPROM_LOG_INIT_MSG ("Стирание Page0...");
             FlashStatus = FLASH_EraseSector (PAGE0_ID);
-            /* If erase operation was failed, a Flash error code is returned */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_INIT_MSG ("❌ Ошибка при стирании Page0!");
                 return FlashStatus;
             }
         }
         break;
 
-    default: /* Any other state -> format eeprom */
-        /* Erase both Page0 and Page1 and set Page0 as valid page */
+    default:
+        EEPROM_LOG_INIT_MSG ("PAGE0: статус 0x%04X (неизвестный)", PageStatus0);
+        EEPROM_LOG_INIT_MSG ("Сценарий: Любое другое состояние");
+        EEPROM_LOG_INIT_MSG ("Действие: Форматирование EEPROM");
+
+        /* Стирание обеих страниц и установка Page0 как валидной */
         FlashStatus = EE_Format();
-        /* If erase/program operation was failed, a Flash error code is returned */
         if (FlashStatus != FLASH_COMPLETE) {
+            EEPROM_LOG_INIT_MSG ("❌ Ошибка при форматировании!");
             return FlashStatus;
         }
         break;
     }
+
+    EEPROM_LOG_INIT_MSG ("----------------------------------------");
+    EEPROM_LOG_INIT_MSG ("✓ Инициализация завершена успешно");
+    EEPROM_LOG_INIT_MSG ("╚════════════════════════════════════════╝");
 
     return FLASH_COMPLETE;
 }
 
 /**
- * @brief  Returns the last stored variable data, if found, which correspond to
- *   the passed virtual address
- * @param  VirtAddress: Variable virtual address
- * @param  Data: Global variable contains the read variable value
- * @retval Success or error status:
- *           - 0: if variable was found
- *           - 1: if the variable was not found
- *           - NO_VALID_PAGE: if no valid page was found.
+ * @brief  Возвращает последние сохраненные данные переменной, если найдены,
+ *         которые соответствуют переданному виртуальному адресу
+ * @param  VirtAddress: Виртуальный адрес переменной
+ * @param  Data: Глобальная переменная, содержащая прочитанное значение переменной
+ * @retval Статус успеха или ошибки:
+ *           - 0: если переменная была найдена
+ *           - 1: если переменная не была найдена
+ *           - NO_VALID_PAGE: если валидная страница не была найдена
  */
 uint16_t EE_ReadVariable (uint16_t VirtAddress, uint16_t *Data) {
+    EEPROM_LOG_READ_MSG ("→ Чтение переменной, VirtAddr: 0x%04X", VirtAddress);
+
     uint16_t ValidPage = PAGE0;
     uint16_t AddressValue = 0x5555, ReadStatus = 1;
     uint32_t Address = EEPROM_START_ADDRESS, PageStartAddress = EEPROM_START_ADDRESS;
 
-    /* Get active Page for read operation */
+    /* Получение активной страницы для операции чтения */
     ValidPage = EE_FindValidPage (READ_FROM_VALID_PAGE);
+    EEPROM_LOG_READ_MSG ("  Активная страница: %s", ValidPage == PAGE0 ? "PAGE0" : (ValidPage == PAGE1 ? "PAGE1" : "НЕТ ВАЛИДНОЙ"));
 
-    /* Check if there is no valid page */
+    /* Проверка на отсутствие валидной страницы */
     if (ValidPage == NO_VALID_PAGE) {
+        EEPROM_LOG_READ_MSG ("  ❌ Валидная страница не найдена!");
         return NO_VALID_PAGE;
     }
 
-    /* Get the valid Page start Address */
+    /* Получение начального адреса валидной страницы */
     PageStartAddress = (uint32_t)(EEPROM_START_ADDRESS + (uint32_t)(ValidPage * PAGE_SIZE));
+    EEPROM_LOG_READ_MSG ("  Начальный адрес страницы: 0x%08X", PageStartAddress);
 
-    /* Get the valid Page end Address */
+    /* Получение конечного адреса валидной страницы */
     Address = (uint32_t)((EEPROM_START_ADDRESS - 2) + (uint32_t)((1 + ValidPage) * PAGE_SIZE));
+    EEPROM_LOG_READ_MSG ("  Конечный адрес страницы: 0x%08X", Address);
 
-    /* Check each active page address starting from end */
+    /* Проверка каждого адреса активной страницы, начиная с конца */
+    EEPROM_LOG_READ_MSG ("  Поиск переменной (от конца к началу)...");
+    int search_count = 0;
     while (Address > (PageStartAddress + 2)) {
-        /* Get the current location content to be compared with virtual address */
+        /* Получение содержимого текущего адреса для сравнения с виртуальным адресом */
         AddressValue = (*(__IO uint16_t *)Address);
 
-        /* Compare the read address with the virtual address */
+        /* Сравнение прочитанного адреса с виртуальным адресом */
         if (AddressValue == VirtAddress) {
-            /* Get content of Address-2 which is variable value */
+            /* Получение содержимого Address-2, которое является значением переменной */
             *Data = (*(__IO uint16_t *)(Address - 2));
 
-            /* In case variable value is read, reset ReadStatus flag */
-            ReadStatus = 0;
+            EEPROM_LOG_READ_MSG ("  ✓ Переменная найдена на адресе 0x%08X", Address);
+            EEPROM_LOG_READ_MSG ("  Значение: 0x%04X (проверено %d адресов)", *Data, search_count + 1);
 
+            /* Если значение переменной прочитано, сброс флага ReadStatus */
+            ReadStatus = 0;
             break;
         } else {
-            /* Next address location */
+            /* Переход к следующему адресу */
             Address = Address - 4;
+            search_count++;
         }
     }
 
-    /* Return ReadStatus value: (0: variable exist, 1: variable doesn't exist) */
+    if (ReadStatus == 1) {
+        EEPROM_LOG_READ_MSG ("  ❌ Переменная НЕ найдена (проверено %d адресов)", search_count);
+    }
+
+    /* Возврат значения ReadStatus: (0: переменная существует, 1: переменная не существует) */
     return ReadStatus;
 }
 
 /**
- * @brief  Writes/upadtes variable data in EEPROM.
- * @param  VirtAddress: Variable virtual address
- * @param  Data: 16 bit data to be written
- * @retval Success or error status:
- *           - FLASH_COMPLETE: on success
- *           - PAGE_FULL: if valid page is full
- *           - NO_VALID_PAGE: if no valid page was found
- *           - Flash error code: on write Flash error
+ * @brief  Записывает/обновляет данные переменной в EEPROM
+ * @param  VirtAddress: Виртуальный адрес переменной
+ * @param  Data: 16-битные данные для записи
+ * @retval Статус успеха или ошибки:
+ *           - FLASH_COMPLETE: при успехе
+ *           - PAGE_FULL: если валидная страница заполнена
+ *           - NO_VALID_PAGE: если валидная страница не была найдена
+ *           - Код ошибки Flash: при ошибке записи во Flash
  */
 uint16_t EE_WriteVariable (uint16_t VirtAddress, uint16_t Data) {
+    EEPROM_LOG_WRITE_MSG ("═");
+    EEPROM_LOG_WRITE_MSG ("→ Write Addr:0x%04X D:0x%04X", VirtAddress, Data);
+
     uint16_t Status = 0;
 
-    /* Write the variable virtual address and value in the EEPROM */
+    /* Запись виртуального адреса и значения переменной в EEPROM */
     Status = EE_VerifyPageFullWriteVariable (VirtAddress, Data);
 
-    /* In case the EEPROM active page is full */
+    /* Если активная страница EEPROM заполнена */
     if (Status == PAGE_FULL) {
-        /* Perform Page transfer */
+        EEPROM_LOG_WRITE_MSG ("  ⚠ Page Full!");
+        EEPROM_LOG_WRITE_MSG ("  Page transfer...");
+        /* Выполнить перенос страницы */
         Status = EE_PageTransfer (VirtAddress, Data);
     }
 
-    /* Return last operation status */
+    if (Status == FLASH_COMPLETE) {
+        EEPROM_LOG_WRITE_MSG ("  ✓ Write..Ok");
+    } else {
+        EEPROM_LOG_WRITE_MSG ("  ❌ Write Error: 0x%04X", Status);
+    }
+    EEPROM_LOG_WRITE_MSG ("═");
+
+    /* Возврат статуса последней операции */
     return Status;
 }
 
 /**
- * @brief  Erases PAGE and PAGE1 and writes VALID_PAGE header to PAGE
- * @param  None
- * @retval Status of the last operation (Flash write or erase) done during
- *         EEPROM formating
+ * @brief  Стирает PAGE0 и PAGE1 и записывает заголовок VALID_PAGE в PAGE0
+ * @param  Нет параметров
+ * @retval Статус последней операции (запись или стирание Flash), выполненной
+ *         во время форматирования EEPROM
  */
 static FLASH_Status EE_Format (void) {
+    EEPROM_LOG_FORMAT_MSG ("╔════════════════════════════════════════╗");
+    EEPROM_LOG_FORMAT_MSG ("║     ФОРМАТИРОВАНИЕ EEPROM              ║");
+    EEPROM_LOG_FORMAT_MSG ("╚════════════════════════════════════════╝");
+
     FLASH_Status FlashStatus = FLASH_COMPLETE;
 
-    /* Erase Page0 */
+    /* Стирание Page0 */
+    EEPROM_LOG_FORMAT_MSG ("Шаг 1/3: Стирание Page0...");
     FlashStatus = FLASH_EraseSector (PAGE0_ID);
 
-    /* If erase operation was failed, a Flash error code is returned */
+    /* Если операция стирания не удалась, возвращается код ошибки Flash */
     if (FlashStatus != FLASH_COMPLETE) {
+        EEPROM_LOG_FORMAT_MSG ("❌ Ошибка при стирании Page0!");
         return FlashStatus;
     }
+    EEPROM_LOG_FORMAT_MSG ("✓ Page0 стерта");
 
-    /* Set Page0 as valid page: Write VALID_PAGE at Page0 base address */
+    /* Установка Page0 как валидной страницы: запись VALID_PAGE по базовому адресу Page0 */
+    EEPROM_LOG_FORMAT_MSG ("Шаг 2/3: Установка Page0 как валидной...");
+    FLASH_Unlock();
     FlashStatus = FLASH_ProgramHalfWord (PAGE0_BASE_ADDRESS, VALID_PAGE);
-
-    /* If program operation was failed, a Flash error code is returned */
+    FLASH_Lock();
+    /* Если операция программирования не удалась, возвращается код ошибки Flash */
     if (FlashStatus != FLASH_COMPLETE) {
+        EEPROM_LOG_FORMAT_MSG ("❌ Ошибка при записи статуса Page0!");
         return FlashStatus;
     }
+    EEPROM_LOG_FORMAT_MSG ("✓ Page0 помечена как VALID_PAGE");
 
-    /* Erase Page1 */
+    /* Стирание Page1 */
+    EEPROM_LOG_FORMAT_MSG ("Шаг 3/3: Стирание Page1...");
     FlashStatus = FLASH_EraseSector (PAGE1_ID);
 
-    /* Return Page1 erase operation status */
+    if (FlashStatus == FLASH_COMPLETE) {
+        EEPROM_LOG_FORMAT_MSG ("✓ Page1 стерта");
+        EEPROM_LOG_FORMAT_MSG ("✓ Форматирование завершено успешно");
+    } else {
+        EEPROM_LOG_FORMAT_MSG ("❌ Ошибка при стирании Page1!");
+    }
+    EEPROM_LOG_FORMAT_MSG ("╚════════════════════════════════════════╝");
+
+    /* Возврат статуса операции стирания Page1 */
     return FlashStatus;
 }
 
 /**
- * @brief  Find valid Page for write or read operation
- * @param  Operation: operation to achieve on the valid page.
- *   This parameter can be one of the following values:
- *     @arg READ_FROM_VALID_PAGE: read operation from valid page
- *     @arg WRITE_IN_VALID_PAGE: write operation from valid page
- * @retval Valid page number (PAGE or PAGE1) or NO_VALID_PAGE in case
- *   of no valid page was found
+ * @brief  Поиск валидной страницы для операции записи или чтения
+ * @param  Operation: операция, которую необходимо выполнить на валидной странице.
+ *   Этот параметр может принимать одно из следующих значений:
+ *     @arg READ_FROM_VALID_PAGE: операция чтения из валидной страницы
+ *     @arg WRITE_IN_VALID_PAGE: операция записи в валидную страницу
+ * @retval Номер валидной страницы (PAGE0 или PAGE1) или NO_VALID_PAGE
+ *         в случае, если валидная страница не была найдена
  */
 static uint16_t EE_FindValidPage (uint8_t Operation) {
     uint16_t PageStatus0 = 6, PageStatus1 = 6;
 
-    /* Get Page0 actual status */
+    /* Получение актуального статуса Page0 */
     PageStatus0 = (*(__IO uint16_t *)PAGE0_BASE_ADDRESS);
 
-    /* Get Page1 actual status */
+    /* Получение актуального статуса Page1 */
     PageStatus1 = (*(__IO uint16_t *)PAGE1_BASE_ADDRESS);
 
-    /* Write or read operation */
+    /* Операция записи или чтения */
     switch (Operation) {
-    case WRITE_IN_VALID_PAGE: /* ---- Write operation ---- */
+    case WRITE_IN_VALID_PAGE: /* ---- Операция записи ---- */
         if (PageStatus1 == VALID_PAGE) {
-            /* Page0 receiving data */
+            /* Page0 принимает данные */
             if (PageStatus0 == RECEIVE_DATA) {
-                return PAGE0; /* Page0 valid */
+                return PAGE0; /* Page0 валидна */
             } else {
-                return PAGE1; /* Page1 valid */
+                return PAGE1; /* Page1 валидна */
             }
         } else if (PageStatus0 == VALID_PAGE) {
-            /* Page1 receiving data */
+            /* Page1 принимает данные */
             if (PageStatus1 == RECEIVE_DATA) {
-                return PAGE1; /* Page1 valid */
+                return PAGE1; /* Page1 валидна */
             } else {
-                return PAGE0; /* Page0 valid */
+                return PAGE0; /* Page0 валидна */
             }
         } else {
-            return NO_VALID_PAGE; /* No valid Page */
+            return NO_VALID_PAGE; /* Нет валидной страницы */
         }
 
-    case READ_FROM_VALID_PAGE:    /* ---- Read operation ---- */
+    case READ_FROM_VALID_PAGE:    /* ---- Операция чтения ---- */
         if (PageStatus0 == VALID_PAGE) {
-            return PAGE0;         /* Page0 valid */
+            return PAGE0;         /* Page0 валидна */
         } else if (PageStatus1 == VALID_PAGE) {
-            return PAGE1;         /* Page1 valid */
+            return PAGE1;         /* Page1 валидна */
         } else {
-            return NO_VALID_PAGE; /* No valid Page */
+            return NO_VALID_PAGE; /* Нет валидной страницы */
         }
 
     default:
-        return PAGE0; /* Page0 valid */
+        return PAGE0; /* Page0 валидна (по умолчанию) */
     }
 }
 
 /**
- * @brief  Verify if active page is full and Writes variable in EEPROM.
- * @param  VirtAddress: 16 bit virtual address of the variable
- * @param  Data: 16 bit data to be written as variable value
- * @retval Success or error status:
- *           - FLASH_COMPLETE: on success
- *           - PAGE_FULL: if valid page is full
- *           - NO_VALID_PAGE: if no valid page was found
- *           - Flash error code: on write Flash error
+ * @brief  Проверяет, заполнена ли активная страница, и записывает переменную в EEPROM
+ * @param  VirtAddress: 16-битный виртуальный адрес переменной
+ * @param  Data: 16-битные данные для записи как значение переменной
+ * @retval Статус успеха или ошибки:
+ *           - FLASH_COMPLETE: при успехе
+ *           - PAGE_FULL: если валидная страница заполнена
+ *           - NO_VALID_PAGE: если валидная страница не была найдена
+ *           - Код ошибки Flash: при ошибке записи во Flash
  */
 static uint16_t EE_VerifyPageFullWriteVariable (uint16_t VirtAddress, uint16_t Data) {
+    EEPROM_LOG_WRITE_MSG ("  Проверка заполненности страницы и запись...");
+
     FLASH_Status FlashStatus = FLASH_COMPLETE;
     uint16_t ValidPage = PAGE0;
     uint32_t Address = EEPROM_START_ADDRESS, PageEndAddress = EEPROM_START_ADDRESS + PAGE_SIZE;
 
-    /* Get valid Page for write operation */
+    /* Получение валидной страницы для операции записи */
     ValidPage = EE_FindValidPage (WRITE_IN_VALID_PAGE);
+    EEPROM_LOG_WRITE_MSG ("    Валидная страница для записи: %s", ValidPage == PAGE0 ? "PAGE0" : (ValidPage == PAGE1 ? "PAGE1" : "НЕТ"));
 
-    /* Check if there is no valid page */
+    /* Проверка на отсутствие валидной страницы */
     if (ValidPage == NO_VALID_PAGE) {
+        EEPROM_LOG_WRITE_MSG ("    ❌ Валидная страница не найдена!");
         return NO_VALID_PAGE;
     }
 
-    /* Get the valid Page start Address */
+    /* Получение начального адреса валидной страницы */
     Address = (uint32_t)(EEPROM_START_ADDRESS + (uint32_t)(ValidPage * PAGE_SIZE));
 
-    /* Get the valid Page end Address */
+    /* Получение конечного адреса валидной страницы */
     PageEndAddress = (uint32_t)((EEPROM_START_ADDRESS - 2) + (uint32_t)((1 + ValidPage) * PAGE_SIZE));
+    EEPROM_LOG_WRITE_MSG ("    адрес: 0x%08X..0x%08X", Address, PageEndAddress);
 
-    /* Check each active page address starting from begining */
+    /* Проверка каждого адреса активной страницы, начиная с начала */
+    EEPROM_LOG_WRITE_MSG ("    Search available space...");
+    int checked_addresses = 0;
     while (Address < PageEndAddress) {
-        /* Verify if Address and Address+2 contents are 0xFFFFFFFF */
+        /* Проверка, содержат ли Address и Address+2 значение 0xFFFFFFFF (пусто) */
         if ((*(__IO uint32_t *)Address) == 0xFFFFFFFF) {
-            /* Set variable data */
+            EEPROM_LOG_WRITE_MSG ("    ✓ Свободное место найдено на 0x%08X (проверено %d адресов)", Address, checked_addresses + 1);
+
+            /* Установка данных переменной */
+            EEPROM_LOG_WRITE_MSG ("    Запись данных (0x%04X) на адрес 0x%08X...", Data, Address);
+            FLASH_Unlock();
             FlashStatus = FLASH_ProgramHalfWord (Address, Data);
-            /* If program operation was failed, a Flash error code is returned */
+            FLASH_Lock();
+            /* Если операция программирования не удалась, возвращается код ошибки Flash */
             if (FlashStatus != FLASH_COMPLETE) {
+                EEPROM_LOG_WRITE_MSG ("    ❌ Ошибка записи данных!");
                 return FlashStatus;
             }
-            /* Set variable virtual address */
+
+            /* Установка виртуального адреса переменной */
+            EEPROM_LOG_WRITE_MSG ("    Запись VirtAddr (0x%04X) на адрес 0x%08X...", VirtAddress, Address + 2);
+            FLASH_Unlock();
             FlashStatus = FLASH_ProgramHalfWord (Address + 2, VirtAddress);
-            /* Return program operation status */
+            FLASH_Lock();
+            if (FlashStatus == FLASH_COMPLETE) {
+                EEPROM_LOG_WRITE_MSG ("    ✓ Переменная успешно записана");
+            } else {
+                EEPROM_LOG_WRITE_MSG ("    ❌ Ошибка записи виртуального адреса!");
+            }
+
+            /* Возврат статуса операции программирования */
             return FlashStatus;
         } else {
-            /* Next address location */
+            /* Переход к следующему адресу */
             Address = Address + 4;
+            checked_addresses++;
         }
     }
 
-    /* Return PAGE_FULL in case the valid page is full */
+    /* Возврат PAGE_FULL в случае, если валидная страница заполнена */
+    EEPROM_LOG_WRITE_MSG ("    ⚠ Страница ЗАПОЛНЕНА (проверено %d адресов)", checked_addresses);
     return PAGE_FULL;
 }
 
 /**
- * @brief  Transfers last updated variables data from the full Page to
- *   an empty one.
- * @param  VirtAddress: 16 bit virtual address of the variable
- * @param  Data: 16 bit data to be written as variable value
- * @retval Success or error status:
- *           - FLASH_COMPLETE: on success
- *           - PAGE_FULL: if valid page is full
- *           - NO_VALID_PAGE: if no valid page was found
- *           - Flash error code: on write Flash error
+ * @brief  Переносит данные последних обновленных переменных из заполненной
+ *         страницы в пустую
+ * @param  VirtAddress: 16-битный виртуальный адрес переменной
+ * @param  Data: 16-битные данные для записи как значение переменной
+ * @retval Статус успеха или ошибки:
+ *           - FLASH_COMPLETE: при успехе
+ *           - PAGE_FULL: если валидная страница заполнена
+ *           - NO_VALID_PAGE: если валидная страница не была найдена
+ *           - Код ошибки Flash: при ошибке записи во Flash
  */
 static uint16_t EE_PageTransfer (uint16_t VirtAddress, uint16_t Data) {
+    EEPROM_LOG_TRANSFER_MSG ("╔════════════════════════════════════════╗");
+    EEPROM_LOG_TRANSFER_MSG ("║       ПЕРЕНОС СТРАНИЦЫ                 ║");
+    EEPROM_LOG_TRANSFER_MSG ("╚════════════════════════════════════════╝");
+    EEPROM_LOG_TRANSFER_MSG ("Причина: активная страница заполнена");
+    EEPROM_LOG_TRANSFER_MSG ("Новая переменная: VirtAddr=0x%04X, Data=0x%04X", VirtAddress, Data);
+
     FLASH_Status FlashStatus = FLASH_COMPLETE;
     uint32_t NewPageAddress = EEPROM_START_ADDRESS;
     uint16_t OldPageId = 0;
     uint16_t ValidPage = PAGE0, VarIdx = 0;
     uint16_t EepromStatus = 0, ReadStatus = 0;
 
-    /* Get active Page for read operation */
+    /* Получение активной страницы для операции чтения */
     ValidPage = EE_FindValidPage (READ_FROM_VALID_PAGE);
 
-    if (ValidPage == PAGE1) /* Page1 valid */
-    {
-        /* New page address where variable will be moved to */
+    if (ValidPage == PAGE1) {
+        EEPROM_LOG_TRANSFER_MSG ("Старая страница: PAGE1 (0x%08X)", PAGE1_BASE_ADDRESS);
+        EEPROM_LOG_TRANSFER_MSG ("Новая страница: PAGE0 (0x%08X)", PAGE0_BASE_ADDRESS);
+
+        /* Адрес новой страницы, куда будет перенесена переменная */
         NewPageAddress = PAGE0_BASE_ADDRESS;
 
-        /* Old page ID where variable will be taken from */
+        /* ID старой страницы, откуда будет взята переменная */
         OldPageId = PAGE1_ID;
-    } else if (ValidPage == PAGE0) /* Page0 valid */
-    {
-        /* New page address  where variable will be moved to */
+    } else if (ValidPage == PAGE0) {
+        EEPROM_LOG_TRANSFER_MSG ("Старая страница: PAGE0 (0x%08X)", PAGE0_BASE_ADDRESS);
+        EEPROM_LOG_TRANSFER_MSG ("Новая страница: PAGE1 (0x%08X)", PAGE1_BASE_ADDRESS);
+
+        /* Адрес новой страницы, куда будет перенесена переменная */
         NewPageAddress = PAGE1_BASE_ADDRESS;
 
-        /* Old page ID where variable will be taken from */
+        /* ID старой страницы, откуда будет взята переменная */
         OldPageId = PAGE0_ID;
     } else {
-        return NO_VALID_PAGE; /* No valid Page */
+        EEPROM_LOG_TRANSFER_MSG ("❌ Валидная страница не найдена!");
+        return NO_VALID_PAGE; /* Нет валидной страницы */
     }
 
-    /* Set the new Page status to RECEIVE_DATA status */
+    /* Установка статуса новой страницы в RECEIVE_DATA */
+    EEPROM_LOG_TRANSFER_MSG ("----------------------------------------");
+    EEPROM_LOG_TRANSFER_MSG ("Шаг 1: Установка статуса RECEIVE_DATA для новой страницы...");
+    FLASH_Unlock();
     FlashStatus = FLASH_ProgramHalfWord (NewPageAddress, RECEIVE_DATA);
-    /* If program operation was failed, a Flash error code is returned */
+    FLASH_Lock();
+    /* Если операция программирования не удалась, возвращается код ошибки Flash */
     if (FlashStatus != FLASH_COMPLETE) {
+        EEPROM_LOG_TRANSFER_MSG ("❌ Ошибка установки статуса!");
         return FlashStatus;
     }
+    EEPROM_LOG_TRANSFER_MSG ("✓ Статус установлен");
 
-    /* Write the variable passed as parameter in the new active page */
+    /* Запись переменной, переданной как параметр, в новую активную страницу */
+    EEPROM_LOG_TRANSFER_MSG ("Шаг 2: Запись новой переменной в новую страницу...");
     EepromStatus = EE_VerifyPageFullWriteVariable (VirtAddress, Data);
-    /* If program operation was failed, a Flash error code is returned */
+    /* Если операция программирования не удалась, возвращается код ошибки Flash */
     if (EepromStatus != FLASH_COMPLETE) {
+        EEPROM_LOG_TRANSFER_MSG ("❌ Ошибка записи новой переменной!");
         return EepromStatus;
     }
+    EEPROM_LOG_TRANSFER_MSG ("✓ Новая переменная записана");
 
-    /* Transfer process: transfer variables from old to the new active page */
+    /* Процесс переноса: перенос переменных со старой на новую активную страницу */
+    EEPROM_LOG_TRANSFER_MSG ("Шаг 3: Перенос существующих переменных (всего: %d)...", NB_OF_VAR);
+    int transferred = 0, skipped = 0;
     for (VarIdx = 0; VarIdx < NB_OF_VAR; VarIdx++) {
-        if (VirtAddVarTab[VarIdx] != VirtAddress) /* Check each variable except the one passed as parameter */
-        {
-            /* Read the other last variable updates */
+        if (VirtAddVarTab[VarIdx] != VirtAddress) {
+            EEPROM_LOG_TRANSFER_MSG ("  Переменная %d (VirtAddr: 0x%04X)...", VarIdx, VirtAddVarTab[VarIdx]);
+
+            /* Чтение последних обновлений других переменных */
             ReadStatus = EE_ReadVariable (VirtAddVarTab[VarIdx], &DataVar);
-            /* In case variable corresponding to the virtual address was found */
+            /* Если переменная, соответствующая виртуальному адресу, была найдена */
             if (ReadStatus != 0x1) {
-                /* Transfer the variable to the new active page */
+                EEPROM_LOG_TRANSFER_MSG ("    Найдена, значение: 0x%04X", DataVar);
+                /* Перенос переменной на новую активную страницу */
                 EepromStatus = EE_VerifyPageFullWriteVariable (VirtAddVarTab[VarIdx], DataVar);
-                /* If program operation was failed, a Flash error code is returned */
+                /* Если операция программирования не удалась, возвращается код ошибки Flash */
                 if (EepromStatus != FLASH_COMPLETE) {
+                    EEPROM_LOG_TRANSFER_MSG ("    ❌ Ошибка переноса!");
                     return EepromStatus;
                 }
+                EEPROM_LOG_TRANSFER_MSG ("    ✓ Перенесена");
+                transferred++;
+            } else {
+                EEPROM_LOG_TRANSFER_MSG ("    Не найдена, пропуск");
+                skipped++;
             }
+        } else {
+            EEPROM_LOG_TRANSFER_MSG ("  Переменная %d - уже записана, пропуск", VarIdx);
+            skipped++;
         }
     }
+    EEPROM_LOG_TRANSFER_MSG ("  Итог: перенесено=%d, пропущено=%d", transferred, skipped);
 
-    /* Erase the old Page: Set old Page status to ERASED status */
+    /* Стирание старой страницы: установка статуса старой страницы в ERASED */
+    EEPROM_LOG_TRANSFER_MSG ("Шаг 4: Стирание старой страницы...");
     FlashStatus = FLASH_EraseSector (OldPageId);
-    /* If erase operation was failed, a Flash error code is returned */
+    /* Если операция стирания не удалась, возвращается код ошибки Flash */
     if (FlashStatus != FLASH_COMPLETE) {
+        EEPROM_LOG_TRANSFER_MSG ("❌ Ошибка стирания старой страницы!");
         return FlashStatus;
     }
+    EEPROM_LOG_TRANSFER_MSG ("✓ Старая страница стерта");
 
-    /* Set new Page status to VALID_PAGE status */
+    /* Установка статуса новой страницы в VALID_PAGE */
+    EEPROM_LOG_TRANSFER_MSG ("Шаг 5: Установка статуса VALID_PAGE для новой страницы...");
+    FLASH_Unlock();
     FlashStatus = FLASH_ProgramHalfWord (NewPageAddress, VALID_PAGE);
-    /* If program operation was failed, a Flash error code is returned */
+    FLASH_Lock();
+    /* Если операция программирования не удалась, возвращается код ошибки Flash */
     if (FlashStatus != FLASH_COMPLETE) {
+        EEPROM_LOG_TRANSFER_MSG ("❌ Ошибка установки финального статуса!");
         return FlashStatus;
     }
+    EEPROM_LOG_TRANSFER_MSG ("✓ Новая страница активирована");
 
-    /* Return last operation flash status */
+    EEPROM_LOG_TRANSFER_MSG ("----------------------------------------");
+    EEPROM_LOG_TRANSFER_MSG ("✓ Перенос страницы завершен успешно");
+    EEPROM_LOG_TRANSFER_MSG ("╚════════════════════════════════════════╝");
+
+    /* Возврат статуса последней операции с flash */
     return FlashStatus;
 }

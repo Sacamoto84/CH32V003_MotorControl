@@ -3,12 +3,17 @@
 
 // #include "eeprom_ch32v.h"
 
-#include "eeprom.h"
+#include "eeprom.hpp"
 
 // extern EEPROM_HandleTypeDef heeprom;
 
 extern uButton b;
 extern Screen screen;
+
+extern uEeprom eeprom_power();
+extern uEeprom eeprom_boostEnable();
+extern uEeprom eeprom_boostPower();
+extern uEeprom eeprom_boostTime();
 
 void status (int step);
 void exit (void);
@@ -184,11 +189,13 @@ void ScreenPower() {
             beep_Save();
             beep_Save();
 
-            uint16_t res = EE_WriteVariable (3, (uint16_t)(100));
-            printf ("Save res:%d\r\n", res);
-            uint16_t temp;
-            res = EE_ReadVariable (3, &temp);
-            printf ("Save id:3 res:%d value:%d\r\n", res, temp);
+
+    
+            // uint16_t res = EE_WriteVariable (3, (uint16_t)(100));
+            // printf ("Save res:%d\r\n", res);
+            // uint16_t temp;
+            // res = EE_ReadVariable (3, &temp);
+            //printf ("Save id:3 res:%d value:%d\r\n", res, temp);
         }
     }
 }

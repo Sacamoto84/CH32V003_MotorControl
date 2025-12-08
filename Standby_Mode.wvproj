@@ -57,6 +57,11 @@
 				"parentLogicPath": "User",
 				"type": "file",
 				"name": "pwm.cpp"
+			},
+			{
+				"name": "eeprom.h",
+				"parentLogicPath": "User",
+				"type": "file"
 			}
 		],
 		"projectName": "Standby_Mode",
@@ -85,7 +90,9 @@
 					"${project}/User/flash_stm32.c",
 					"${project}/User/flash_stm32.h",
 					"${project}/User/EEPROM.c",
-					"${project}/User/eeprom_ch32v.h"
+					"${project}/User/eeprom_ch32v.h",
+					"${project}/User/eeprom_an3969.c",
+					"${project}/User/eeprom.h"
 				],
 				"optimization": {
 					"level": "size",
@@ -128,7 +135,7 @@
 					"other_warning_flags": ""
 				},
 				"debugging": {
-					"debug_level": "none",
+					"debug_level": "default",
 					"debug_format": "default",
 					"generate_prof_information": false,
 					"generate_gprof_information": false,
@@ -364,7 +371,7 @@
 		"mcutype": "CH32V00x",
 		"address": "0x08000000",
 		"target_path": "obj\\Standby_Mode.hex",
-		"clkSpeed": "Low",
+		"clkSpeed": "Middle",
 		"debug_interface_mode": "1-wire serial",
 		"erase": false,
 		"program": true,

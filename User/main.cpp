@@ -19,13 +19,21 @@
 #include "uButton.h"
 #include "pwm.hpp"
 
-#include "eeprom.h"
+#include "eeprom.hpp"
 
 // Создать handle
 // EEPROM_HandleTypeDef heeprom = EEPROM_HANDLE_DEFAULT();
 
 uButton b;
 Pwm pwm;
+ 
+uEeprom eeprom_power(0, 0, 100, 50);       // Мощность мотора
+uEeprom eeprom_boostEnable(1, 0, 1, 0);    // Настройка того что будет использоваться буст
+uEeprom eeprom_boostPower(2, 0, 100, 10);  // 
+uEeprom eeprom_boostTime(3, 0, 100, 100);  // Время буста в ms
+
+uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
+uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
 
 extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
 
@@ -35,12 +43,6 @@ void ScreenBoostPower (void);
 void ScreenNormal (void);
 
 Screen screen = {Screen::NORMAL};
-
-uint16_t configBoostEnable = 0;    // Настройка того что будет использоваться буст
-uint16_t configBoostTime = 100;    // Время буста в ms
-uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
-
-uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
 
 /* Global define */
 // Удобные макросы (можно положить в отдельный .h)
@@ -85,9 +87,6 @@ void EXTI_INT_INIT (void) {
 
 void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
-    // Читаем boostEnable
-    // Проверка существования переменной
-    uint16_t temp = 0;
     uint16_t res = EE_ReadVariable (id, &temp);
 
     // printf ("temp: %d\n", temp);
@@ -107,29 +106,13 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
 void userEEPROM() {
 
-    EE_Init();
-
-    // // 1. Инициализация
-    // status = EEPROM_Init (&heeprom);
-    // if (status != EEPROM_OK) {
-    //     // Ошибка инициализации
-    //     printf ("Ошибка инициализации EEPROM\r\n");
-    //     uint16_t res = EEPROM_Format(&heeprom);
-    //     if (res == EEPROM_OK ){
-    //          printf ("Форматирование EEPROM OK\r\n");
-    //     }
-    //     else {
-    //          printf ("Форматирование EEPROM ошибка\r\n");
-    //     }
-    //     return;
-    // }
-
     printf (".READ CONFIG Boost Enable\r\n");
     userInitVarEEPROM (1, &configBoostEnable, 0);
     printf (".READ CONFIG Boost Time\r\n");
     userInitVarEEPROM (2, &configBoostTime, 200);
     printf (".READ CONFIG Power\r\n");
     userInitVarEEPROM (3, &configCurrentPower, 50);
+
 }
 
 int main (void) {

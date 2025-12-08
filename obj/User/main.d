@@ -22,7 +22,7 @@ User/main.o: ../User/main.cpp f:/CH32V003_MotorControl/SRC/Debug/debug.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x_opa.h \
  f:/CH32V003_MotorControl/SRC/Peripheral/inc/ch32v00x.h \
  f:/CH32V003_MotorControl/User/buzzer_tunes.h ../User/uButton.h \
- ../User/uButtonVirt.h ../User/pwm.hpp ../User/eeprom.h
+ ../User/uButtonVirt.h ../User/pwm.hpp ../User/eeprom.hpp
 
 f:/CH32V003_MotorControl/SRC/Debug/debug.h:
 
@@ -78,4 +78,4 @@ f:/CH32V003_MotorControl/User/buzzer_tunes.h:
 
 ../User/pwm.hpp:
 
-../User/eeprom.h:
+../User/eeprom.hpp:
