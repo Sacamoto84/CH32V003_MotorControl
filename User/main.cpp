@@ -22,7 +22,7 @@
 #include "eeprom.h"
 
 // Создать handle
-//EEPROM_HandleTypeDef heeprom = EEPROM_HANDLE_DEFAULT();
+// EEPROM_HandleTypeDef heeprom = EEPROM_HANDLE_DEFAULT();
 
 uButton b;
 Pwm pwm;
@@ -88,15 +88,15 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
     // Читаем boostEnable
     // Проверка существования переменной
     uint16_t temp = 0;
-    uint16_t res = EEPROM_Read(&heeprom, id, &temp); 
+    uint16_t res = EE_ReadVariable (id, &temp);
 
     // printf ("temp: %d\n", temp);
-    if (res != EEPROM_OK) {
+    if (res != 0) {
         // Переменной нет
         printf ("EEPROM id:%d ! Not Present !\r\n", id);
-        res = EEPROM_Write (&heeprom,id, def);  // Сохранить по умолчанию 0
+        res = EE_WriteVariable (id, def);  // Сохранить по умолчанию 0
         printf ("EEPROM Save code:%d\n", res);
-        res = EEPROM_Read (&heeprom, id, &temp);
+        res = EE_ReadVariable (id, &temp);
         printf ("EEPROM Verification id:%d Value: %d code:%d\r\n", id, temp, res);
         *value = def;
     } else {
@@ -107,10 +107,8 @@ void userInitVarEEPROM (uint8_t id, uint16_t *value, uint16_t def) {
 
 void userEEPROM() {
 
-    uint16_t status;
-
     EE_Init();
-  
+
     // // 1. Инициализация
     // status = EEPROM_Init (&heeprom);
     // if (status != EEPROM_OK) {

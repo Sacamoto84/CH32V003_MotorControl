@@ -1,9 +1,11 @@
 #include "debug.h"
 #include "uButton.h"
 
-#include "eeprom_ch32v.h"
+// #include "eeprom_ch32v.h"
 
-extern EEPROM_HandleTypeDef heeprom;
+#include "eeprom.h"
+
+// extern EEPROM_HandleTypeDef heeprom;
 
 extern uButton b;
 extern Screen screen;
@@ -38,7 +40,10 @@ void ScreenNormal (void) {
         buzzer_ios_click();
 
         for (int i = 0; i < 128; i++) {
-            uint16_t res = EEPROM_Write (&heeprom, 4, i);
+            uint16_t res = EE_WriteVariable (4, i);
+            if (res != FLASH_COMPLETE) {
+                printf ("EEPROM Ошибка записи %d\n", res);
+            }
         }
 
         if (comandMotorOn)
@@ -179,10 +184,10 @@ void ScreenPower() {
             beep_Save();
             beep_Save();
 
-            uint16_t res = EEPROM_Write (&heeprom, 3, (uint16_t)(100));
+            uint16_t res = EE_WriteVariable (3, (uint16_t)(100));
             printf ("Save res:%d\r\n", res);
             uint16_t temp;
-            res = EEPROM_Read (&heeprom, 3, &temp);
+            res = EE_ReadVariable (3, &temp);
             printf ("Save id:3 res:%d value:%d\r\n", res, temp);
         }
     }

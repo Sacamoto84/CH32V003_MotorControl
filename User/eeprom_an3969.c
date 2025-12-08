@@ -1,4 +1,4 @@
-/* Includes ------------------------------------------------------------------*/
+
 #include "eeprom.h"
 #include "ch32v00x_flash.h"
 
@@ -6,7 +6,7 @@
 uint16_t DataVar = 0;
 
 /* Virtual address defined by the user: 0xFFFF value is prohibited */
-extern uint16_t VirtAddVarTab[NB_OF_VAR];
+uint16_t VirtAddVarTab[NB_OF_VAR];
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -517,9 +517,3 @@ static uint16_t EE_PageTransfer (uint16_t VirtAddress, uint16_t Data) {
     /* Return last operation flash status */
     return FlashStatus;
 }
-
-/**
- * @}
- */
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
