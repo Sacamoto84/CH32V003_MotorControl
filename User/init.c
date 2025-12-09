@@ -13,7 +13,6 @@ void init (void) {
     RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-
     GPIO_Init (GPIOA, &GPIO_InitStructure);
 
     // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 |  GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;

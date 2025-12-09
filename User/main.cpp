@@ -87,12 +87,6 @@ void EXTI_INT_INIT (void) {
 
 void userEEPROM() {
 
-
-    // uEeprom eeprom_power (0, 0, 100, 50, (char*)"power");          // Мощность мотора
-    // uEeprom eeprom_boostEnable (1, 0, 1, 0, (char*)"B Enable");    // Настройка того что будет использоваться буст
-    // uEeprom eeprom_boostPower (2, 0, 100, 10, (char *)"B Power");  //
-    // uEeprom eeprom_boostTime (3, 0, 100, 100, (char *)"B Time");   // Время буста в ms
-
     printf (".READ CONFIG Power\n");
     eeprom_power.init (0, 0, 100, 50, (char *)"Power");
 
@@ -117,7 +111,8 @@ int main (void) {
 
     EXTI_INT_INIT();
 
-    USART_Printf_Init (115200);
+    // USART_Printf_Init (115200);
+    USART_Printf_Init (460800);
 
     printf ("\r\n---------------------------------------\r\n");
     printf ("Привет SystemClk:%d\r\n", SystemCoreClock);
@@ -225,7 +220,7 @@ int main (void) {
     // buzzer_notify();
     // delay (1000);
 
-    // gotoDeepSleep();
+    gotoDeepSleep();
 
     printf ("Go...\r\n");
 
@@ -290,9 +285,12 @@ void gotoDeepSleep (void) {
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;  // ANALOG INPUT - минимум!
 
                                                    //  GPIO_Init (GPIOA, &GPIO_InitStructure);
-    //  GPIO_Init (GPIOC, &GPIO_InitStructure);
-    //  GPIO_Init (GPIOD, &GPIO_InitStructure);
 
+
+    GPIO_Init (GPIOD, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All & ~GPIO_Pin_4;
+    GPIO_Init (GPIOC, &GPIO_InitStructure);
     // // === ОТКЛЮЧИТЬ ВСЕ ПЕРИФЕРИЙНЫЕ БЛОКИ ===
     // // APB2
     // RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA |
@@ -302,14 +300,29 @@ void gotoDeepSleep (void) {
     //                         DISABLE);
 
     // // APB1
-    // RCC_APB1PeriphClockCmd (RCC_APB1Periph_TIM2 | RCC_APB1Periph_WWDG |
-    //                             RCC_APB1Periph_I2C1,
-    //                         DISABLE);
+    RCC_APB1PeriphClockCmd (RCC_APB1Periph_TIM2 | RCC_APB1Periph_WWDG | RCC_APB1Periph_I2C1, DISABLE);
 
     // === ОТКЛЮЧИТЬ HSI (внутренний генератор 24 МГц) ===
     // Это даст основную экономию!
-    //  RCC_HSICmd (DISABLE);
+    //RCC_HSICmd (DISABLE);
 
+    printf ("Заснули\r\n");
     // // === ВОЙТИ В STANDBY БЕЗ ВОЗВРАТА ===
     PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
+   
+    printf ("Проснулись\r\n");
+    //Возврат
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+    GPIO_Init (GPIOC, &GPIO_InitStructure);
+
+    //Возврат
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+    GPIO_Init (GPIOD, &GPIO_InitStructure);
+
+
+
 }

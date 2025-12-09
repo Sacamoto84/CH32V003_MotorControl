@@ -237,5 +237,3 @@ class uEeprom {
 };
 
 #endif /* __cplusplus */
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
