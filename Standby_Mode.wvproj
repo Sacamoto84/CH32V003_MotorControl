@@ -373,7 +373,7 @@
 		"target_path": "obj\\Standby_Mode.hex",
 		"clkSpeed": "Middle",
 		"debug_interface_mode": "",
-		"erase": true,
+		"erase": false,
 		"program": true,
 		"verify": true,
 		"reset": true,

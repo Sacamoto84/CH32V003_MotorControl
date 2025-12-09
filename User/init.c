@@ -39,7 +39,6 @@ void init (void) {
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init (GPIOC, &GPIO_InitStructure);
 
-
     // BUZZER_ON;
     LED_ON;
     Delay_Ms (5);

@@ -127,7 +127,13 @@ void ScreenNormal (void) {
 
 void ScreenPower() {
 
-    int imp = configCurrentPower / 5;
+    int imp = eeprom_power.get() / 5;
+
+    if (b.click()) {
+        printf ("Click\r\n");
+        buzzer_ios_click();
+    }
+
 
     if (b.hasClicks()) {
         printf ("ScreenPower Clicks: %d\r\n", b.getClicks());
@@ -140,7 +146,7 @@ void ScreenPower() {
             } else {
                 buzzer_click();
             }
-            configCurrentPower = imp * 5;
+            eeprom_power.set( imp * 5 );
             printf ("++ Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
 
@@ -159,7 +165,7 @@ void ScreenPower() {
             } else {
                 beep_Decrement_Min();
             }
-            configCurrentPower = imp * 5;
+            eeprom_power.set( imp * 5 );
             printf ("-- Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
 
@@ -181,13 +187,8 @@ void ScreenPower() {
             // Сохраняем реальную мощность configCurrentPower
             beep_Save();
             beep_Save();
-
-
-            // uint16_t res = EE_WriteVariable (3, (uint16_t)(100));
-            // printf ("Save res:%d\r\n", res);
-            // uint16_t temp;
-            // res = EE_ReadVariable (3, &temp);
-            // printf ("Save id:3 res:%d value:%d\r\n", res, temp);
+            //eeprom_power.set (configCurrentPower);
+            eeprom_power.save();
         }
     }
 }

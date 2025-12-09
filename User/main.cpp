@@ -32,7 +32,8 @@ uEeprom eeprom_boostEnable;        // Настройка того что буд�
 uEeprom eeprom_boostPower;         //
 uEeprom eeprom_boostTime;          // Время буста в ms
 
-uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
+//uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
+
 uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
 
 extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
@@ -91,14 +92,14 @@ void userEEPROM() {
     eeprom_power.init (0, 0, 100, 50, (char *)"Power");
 
     printf (".READ CONFIG Boost Enable\n");
-    eeprom_boostEnable.init (1, 0, 1, 0, (char *)"B Enable");
+    eeprom_boostEnable.init (1, 0, 1, 0, (char *)"Boost Enable");
 
     printf (".READ CONFIG Boost Power\n");
-    eeprom_boostPower.init (2, 0, 100, 10, (char *)"B Power");
+    eeprom_boostPower.init (2, 0, 100, 10, (char *)"Boost Power");
 
 
     printf (".READ CONFIG Boost Time\n");
-    eeprom_boostTime.init (3, 0, 100, 100, (char *)"B Time");
+    eeprom_boostTime.init (3, 0, 100, 100, (char *)"Boost Time");
 }
 
 int main (void) {
@@ -145,8 +146,10 @@ int main (void) {
     SysTick->CNT = 0;
     SysTick->CTLR = 0xb;
 
-    pwm.init (100, 9, 0);
-    pwm.setDuty (0);
+    pwm.init (100, 7, 50);
+    pwm.setDutyPercent (25);
+    pwm.setFrequency(50);
+
     pwm.disable();
 
 
@@ -155,78 +158,11 @@ int main (void) {
     tone1_vol (1000, 40, 70);
     tone1_vol (1500, 80, 100);
 
-    // tone1_vol (800, 30, 60);
-    // tone1_vol (1000, 30, 70);
-    // delay (1000);
-
-    //  tone1_vol(1500, 80, 90);
-    // delay(40);
-    // tone1_vol(1500, 80, 90);
-    // delay(40);
-    // tone1_vol(1200, 100, 70);  // Отскок назад
-
-    // // Звук "меньше нельзя"
-    // tone1_vol(800, 80, 90);
-    // delay(40);
-    // tone1_vol(800, 80, 90);
-    // delay(40);
-    // tone1_vol(1000, 100, 70);  // Отскок назад
-
-
-    tone1_vol (1200, 40, 80);
-    tone1_vol (1000, 40, 70);
-    delay (50);
-    tone1_vol (1500, 80, 100);  // Сохранено!
-
-
-    // tone1_vol (1000, 20, 50);
-    // tone1_vol (1200, 25, 60);
-    // delay (1000);
-    // tone1_vol (600, 25, 60);
-    // tone1_vol (900, 25, 75);
-    // tone1_vol (1200, 40, 90);
-
-    // --- СЛУЖЕБНЫЕ ЗВУКИ ---
-    // buzzer_ok();
-    // delay (1000);
-
-    // buzzer_error();
-    // delay (1000);
-
-    // buzzer_error_strong();
-    // delay (1000);
-
-    // buzzer_warning();
-    // delay (1000);
-
-    // buzzer_warning_double();
-    // delay (1000);
-
-    // buzzer_click();
-    // delay (1000);
-
-    // buzzer_success_long();
-    // delay (1000);
-
-    // buzzer_critical();
-    // delay (1000);
-
-    // buzzer_beepboop();
-    // delay (1000);
-
-    // buzzer_access_denied();
-    // delay (1000);
-
-    // buzzer_notify();
-    // delay (1000);
-
     gotoDeepSleep();
 
     printf ("Go...\r\n");
 
     while (1) {
-
-        // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFE);
 
         b.tick();
 
@@ -255,18 +191,28 @@ int main (void) {
         }
 
 
+// if (comandMotorOn) {
+//         pwm.setFrequency(5000);
+// }
+// else{
+//      pwm.setFrequency(50);
+// }
         if (comandMotorOn) {
-            pwm.setDuty (configCurrentPower);
+            //pwm.setDuty (eeprom_boostPower.get());
+            //pwm.setDuty (50);
             pwm.enable();
             LED_ON;
         } else {
             pwm.disable();
             LED_OFF;
         }
+
     }
 }
 
 void gotoDeepSleep (void) {
+
+    return;
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
