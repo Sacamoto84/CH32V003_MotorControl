@@ -27,14 +27,17 @@
 uButton b;
 Pwm pwm;
 
-uEeprom eeprom_power;              // Мощность мотора
-uEeprom eeprom_boostEnable;        // Настройка того что будет использоваться буст
-uEeprom eeprom_boostPower;         //
-uEeprom eeprom_boostTime;          // Время буста в ms
+uEeprom eeprom_power;        // Мощность мотора
+uEeprom eeprom_boostEnable;  // Настройка того что будет использоваться буст
+uEeprom eeprom_boostPower;   //
+uEeprom eeprom_boostTime;    // Время буста в ms
 
-//uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
+// uint16_t configCurrentPower = 10;  // Текущая мощность 0..100
 
-uint16_t comandMotorOn = 0;        // Признак того что мотор должен работать
+uint16_t comandMotorOn = 0;   // Признак того что мотор должен работать
+uint16_t comandMotorOff = 0;  // Признак того что мотор должен работать
+
+extern void Motor_Init (void);
 
 extern "C" void tone1 (uint16_t frequency, uint16_t duration_ms);
 
@@ -146,12 +149,7 @@ int main (void) {
     SysTick->CNT = 0;
     SysTick->CTLR = 0xb;
 
-    pwm.init (100, 7, 50);
-    pwm.setDutyPercent (25);
-    pwm.setFrequency(50);
-
-    pwm.disable();
-
+    Motor_Init();
 
     // Восходящая трель - "данные сохранены"
     // Двойной тон с акцентом на втором
@@ -163,6 +161,8 @@ int main (void) {
     printf ("Go...\r\n");
 
     while (1) {
+
+        Motor_Tick();
 
         b.tick();
 
@@ -176,37 +176,36 @@ int main (void) {
 
         if (screen == Screen::SET_BOOST_ENABLE) {  // 2
             ScreenBoostEnable();
-            comandMotorOn = 0;
+            comandMotorOff = 1;
         }
 
         if (screen == Screen::SET_BOOST_POWER) {  // 3
 
-            comandMotorOn = 0;
+            comandMotorOff = 1;
             ScreenBoostPower();
         }
 
         if (screen == Screen::SET_BOOST_TIME) {  // 4
-            comandMotorOn = 0;
+            comandMotorOff = 1;
             ScreenBoostTime();
         }
 
 
-// if (comandMotorOn) {
-//         pwm.setFrequency(5000);
-// }
-// else{
-//      pwm.setFrequency(50);
-// }
-        if (comandMotorOn) {
-            //pwm.setDuty (eeprom_boostPower.get());
-            //pwm.setDuty (50);
-            pwm.enable();
-            LED_ON;
-        } else {
-            pwm.disable();
-            LED_OFF;
-        }
+        // static bool run = false;
 
+        // if (comandMotorOn) {
+        //     comandMotorOn = false;
+        //     pwm.setFrequency (50);
+        //     pwm.setDuty (eeprom_boostPower.get());
+        //     pwm.setFrequency (5000);
+        //     pwm.enable();
+        //     delay (eeprom_boostTime.get());
+        //     pwm.setDuty (eeprom_power.get());
+        //     LED_ON;
+        // } else {
+        //     pwm.disable();
+        //     LED_OFF;
+        // }
     }
 }
 
@@ -250,25 +249,22 @@ void gotoDeepSleep (void) {
 
     // === ОТКЛЮЧИТЬ HSI (внутренний генератор 24 МГц) ===
     // Это даст основную экономию!
-    //RCC_HSICmd (DISABLE);
+    // RCC_HSICmd (DISABLE);
 
     printf ("Заснули\r\n");
     // // === ВОЙТИ В STANDBY БЕЗ ВОЗВРАТА ===
     PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
-   
+
     printf ("Проснулись\r\n");
-    //Возврат
+    // Возврат
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init (GPIOC, &GPIO_InitStructure);
 
-    //Возврат
+    // Возврат
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init (GPIOD, &GPIO_InitStructure);
-
-
-
 }

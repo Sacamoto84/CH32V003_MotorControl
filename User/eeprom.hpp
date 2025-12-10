@@ -193,12 +193,12 @@ class uEeprom {
         uint32_t address = EEPROM_START_ADDRESS + (index * 64);
 
         EEPROM_LOG_INFO (BOLD "╔════════════════════════════════════════╗" RESET1);
-        EEPROM_LOG_INFO (BOLD "║ Init EEPROM: " FG (82) "%-17s" RESET1 "        ║", title);
+        EEPROM_LOG_INFO (BOLD "║ Init EEPROM: " FG (82) "%-17s" RESET1 "         ║", title);
         EEPROM_LOG_INFO (BOLD "╠════════════════════════════════════════╣" RESET1);
-        EEPROM_LOG_INFO ("║ " FG (226) "Idx: %3u" RESET1 "                                ║", index);
-        EEPROM_LOG_INFO ("║ " FG (141) "Adr: 0x%08X" RESET1 "                       ║", address);
+        EEPROM_LOG_INFO ("║ " FG (226) "Idx: %3u" RESET1 "                               ║", index);
+        EEPROM_LOG_INFO ("║ " FG (141) "Adr: 0x%08X" RESET1 "                        ║", address);
         EEPROM_LOG_INFO ("║ Range: [%3u .. %3u]                    ║", min, max);
-        EEPROM_LOG_INFO ("║ " FG (82) "Def: %-3u" RESET1 "                              ║", define);
+        EEPROM_LOG_INFO ("║ " FG (82) "Def: %-3u" RESET1 "                               ║", define);
         EEPROM_LOG_INFO (BOLD "╚════════════════════════════════════════╝" RESET1);
 
         uint16_t a = (*(volatile uint16_t *)address);

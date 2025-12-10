@@ -89,5 +89,61 @@
         <arguments>1.0-name-matches-false-false-eeprom.h</arguments>
       </matcher>
     </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-eeprom_an3969.c</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-eeprom_ch32v.h</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-EEPROM.c</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-EEPROM1.c</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-EEPROM1.h</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-flash_stm32.c</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <name>User</name>
+      <type>6</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-name-matches-false-false-flash_stm32.h</arguments>
+      </matcher>
+    </filter>
   </filteredResources>
 </projectDescription>

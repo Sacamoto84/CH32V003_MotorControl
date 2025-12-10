@@ -18,10 +18,12 @@ C_DEPS += \
 
 CPP_SRCS += \
 ../User/main.cpp \
+../User/motor.cpp \
 ../User/screens.cpp 
 
 CPP_DEPS += \
 ./User/main.d \
+./User/motor.d \
 ./User/screens.d 
 
 OBJS += \
@@ -29,6 +31,7 @@ OBJS += \
 ./User/ch32v00x_it.o \
 ./User/init.o \
 ./User/main.o \
+./User/motor.o \
 ./User/screens.o \
 ./User/system_ch32v00x.o 
 

@@ -43,19 +43,14 @@ void ScreenNormal (void) {
     if (b.click()) {
         printf ("Click\r\n");
         buzzer_ios_click();
-
-        if (comandMotorOn)
-            comandMotorOn = 0;
-        else
-            comandMotorOn = 1;
+        Motor_Toggle();
     }
 
     if (b.hold()) {
         printf ("Hold\r\n");
-        // buzzer_warning();
         buzzer_startup();
         step = 0;
-        comandMotorOn = 0;
+        Motor_Stop();
     }
 
     // if (b.releaseHold()) {
@@ -146,7 +141,7 @@ void ScreenPower() {
             } else {
                 buzzer_click();
             }
-            eeprom_power.set( imp * 5 );
+            eeprom_power.set (imp * 5);
             printf ("++ Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
 
@@ -165,7 +160,7 @@ void ScreenPower() {
             } else {
                 beep_Decrement_Min();
             }
-            eeprom_power.set( imp * 5 );
+            eeprom_power.set (imp * 5);
             printf ("-- Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
 
@@ -187,7 +182,7 @@ void ScreenPower() {
             // Сохраняем реальную мощность configCurrentPower
             beep_Save();
             beep_Save();
-            //eeprom_power.set (configCurrentPower);
+            // eeprom_power.set (configCurrentPower);
             eeprom_power.save();
         }
     }

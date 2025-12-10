@@ -86,6 +86,13 @@ extern void ScreenBoostPower (void);
 extern void ScreenBoostTime (void);
 
 
+//motor.cpp
+extern void Motor_Start(void);
+extern void Motor_Stop(void);
+extern void Motor_Tick(void);
+extern void Motor_Toggle();
+extern int  Motor_isStop(void);
+
 #ifdef __cplusplus
 }
 #endif
