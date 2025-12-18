@@ -197,7 +197,7 @@ class uEeprom {
         EEPROM_LOG_INFO (BOLD "╠════════════════════════════════════════╣" RESET1);
         EEPROM_LOG_INFO ("║ " FG (226) "Idx: %3u" RESET1 "                               ║", index);
         EEPROM_LOG_INFO ("║ " FG (141) "Adr: 0x%08X" RESET1 "                        ║", address);
-        EEPROM_LOG_INFO ("║ Range: [%3u .. %3u]                    ║", min, max);
+        EEPROM_LOG_INFO ("║ Range: [%3u .. %4u]                   ║", min, max);
         EEPROM_LOG_INFO ("║ " FG (82) "Def: %-3u" RESET1 "                               ║", define);
         EEPROM_LOG_INFO (BOLD "╚════════════════════════════════════════╝" RESET1);
 

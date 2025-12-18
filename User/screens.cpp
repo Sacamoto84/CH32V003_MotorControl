@@ -30,7 +30,6 @@ void beep (int value) {
         // buzzer_click();
 
         buzzer_warning();
-
         LED_OFF;
         delay (200);
     }
@@ -114,24 +113,21 @@ void ScreenNormal (void) {
     if (b.timeout()) {
         printf ("Timeout\r\n");
         buzzer_robot();
-        if (!comandMotorOn) {
+        if (Motor_isStop()) {
             gotoDeepSleep();
         }
     }
 }
 
-void ScreenPower() {
-
-    int imp = eeprom_power.get() / 5;
-
+void uniScreen (uEeprom *eeprom, char *title, uint8_t div) {
+    int imp = eeprom->get() / div;
     if (b.click()) {
         printf ("Click\r\n");
         buzzer_ios_click();
     }
 
-
     if (b.hasClicks()) {
-        printf ("ScreenPower Clicks: %d\r\n", b.getClicks());
+        printf ("%s Clicks: %d\r\n", title, b.getClicks());
 
         if (b.getClicks() == 1) {
             imp++;
@@ -141,7 +137,7 @@ void ScreenPower() {
             } else {
                 buzzer_click();
             }
-            eeprom_power.set (imp * 5);
+            eeprom->set (imp * div);
             printf ("++ Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
 
@@ -160,7 +156,7 @@ void ScreenPower() {
             } else {
                 beep_Decrement_Min();
             }
-            eeprom_power.set (imp * 5);
+            eeprom->set (imp * div);
             printf ("-- Clicks: %d imp:%d\r\n", b.getClicks(), imp);
         }
 
@@ -178,14 +174,15 @@ void ScreenPower() {
 
         // Save
         if (b.getClicks() == 5) {
-
-            // Сохраняем реальную мощность configCurrentPower
             beep_Save();
             beep_Save();
-            // eeprom_power.set (configCurrentPower);
-            eeprom_power.save();
+            eeprom->save();
         }
     }
+}
+
+void ScreenPower() {
+    uniScreen (&eeprom_power, (char *)"ScreenPower", 5);
 }
 
 void ScreenBoostEnable (void) {
@@ -217,65 +214,12 @@ void ScreenBoostEnable (void) {
 }
 
 void ScreenBoostPower (void) {
-    if (b.hold()) {
-        screen = Screen::NORMAL;
-        buzzer_shutdown();
-    }
+    uniScreen (&eeprom_boostPower, (char *)"ScreenBoostPower", 5);
 }
 
 // configBoostTime;     // Время буста в ms  1-импульс 50ms 1..20 50..1000
 void ScreenBoostTime() {
-    static uint32_t step = 0;
-
-    if (b.hold()) {
-        printf ("> ScreenBoostTime Hold\r\n");
-        // buzzer_warning();
-        buzzer_startup();
-        step = 0;
-        comandMotorOn = 0;
-    }
-
-    if (b.step()) {
-        step++;
-        printf ("> ScreenBoostTime Step %d\r\n", step);
-        buzzer_ios_click();
-        LED_ON;
-        delay (5);
-        LED_OFF;
-    }
-
-
-    if (b.releaseStep()) {
-        printf ("> ScreenBoostTime releaseStep\r\n");
-
-        int time = step * 50;
-        printf ("BoostTime: %d ms\n", time);
-
-
-        // if (step == Screen::SET_POWER) {
-        //     screen = Screen::SET_POWER;
-        //     delay (1000);
-        //     for (int i = 0; i < Screen::SET_POWER; i++) {
-        //         LED_ON;
-        //         buzzer_ios_click();
-        //         LED_OFF;
-        //         delay (200);
-        //     }
-        // }
-    }
-
-    if (b.hasClicks()) {
-        printf ("Clicks: %d\r\n", b.getClicks());
-
-        if (b.getClicks() == 2) {
-            exit();
-        }
-
-        if (b.getClicks() == 3) {
-            printf ("getClicks == 3\r\n");
-            status (step);
-        }
-    }
+    uniScreen (&eeprom_boostTime, (char *)"ScreenBoostTime", 50);
 }
 
 void status (int step) {

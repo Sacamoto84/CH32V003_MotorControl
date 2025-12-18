@@ -64,39 +64,39 @@
 				"name": "eeprom.h"
 			},
 			{
-				"name": "eeprom_an3969.c",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "eeprom_an3969.c"
 			},
 			{
-				"name": "eeprom_ch32v.h",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "eeprom_ch32v.h"
 			},
 			{
-				"name": "EEPROM.c",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "EEPROM.c"
 			},
 			{
-				"name": "EEPROM1.c",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "EEPROM1.c"
 			},
 			{
-				"name": "EEPROM1.h",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "EEPROM1.h"
 			},
 			{
-				"name": "flash_stm32.c",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "flash_stm32.c"
 			},
 			{
-				"name": "flash_stm32.h",
 				"parentLogicPath": "User",
-				"type": "file"
+				"type": "file",
+				"name": "flash_stm32.h"
 			}
 		],
 		"projectName": "Standby_Mode",
@@ -403,11 +403,11 @@
 		]
 	},
 	"flashConfig": {
-		"mcutype": "CH32V00x",
+		"mcutype": "CH32V003",
 		"address": "0x08000000",
 		"target_path": "obj\\Standby_Mode.hex",
 		"clkSpeed": "Middle",
-		"debug_interface_mode": "1-wire serial",
+		"debug_interface_mode": "",
 		"erase": false,
 		"program": true,
 		"verify": true,

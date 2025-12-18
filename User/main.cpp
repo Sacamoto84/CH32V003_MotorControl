@@ -102,10 +102,13 @@ void userEEPROM() {
 
 
     printf (".READ CONFIG Boost Time\n");
-    eeprom_boostTime.init (3, 0, 100, 100, (char *)"Boost Time");
+    eeprom_boostTime.init (3, 0, 1000, 100, (char *)"Boost Time");
 }
 
 int main (void) {
+
+
+   // PWR_EnterSTANDBYMode (PWR_STANDBYEntry_WFI);
 
     // Разблокируем нормальный двухпроводный отладочный интерфейс навсегда
     // (записывается в опции-байты при первой прошивке)
@@ -125,9 +128,9 @@ int main (void) {
 
     //----
     printf ("-------------------------\r\n");
-    printf ("CONFIG Power        : %d\r\n", eeprom_power.get());
+    printf ("CONFIG Power        : %d %%\r\n", eeprom_power.get());
     printf ("CONFIG Boost Enable : %d\r\n", eeprom_boostEnable.get());
-    printf ("CONFIG Boost Power   : %d ms\r\n", eeprom_boostPower.get());
+    printf ("CONFIG Boost Power   : %d %%\r\n", eeprom_boostPower.get());
     printf ("CONFIG Boost Time   : %d ms\r\n", eeprom_boostTime.get());
 
     printf ("-------------------------\r\n");
@@ -211,10 +214,9 @@ int main (void) {
 
 void gotoDeepSleep (void) {
 
-    return;
+   
 
     GPIO_InitTypeDef GPIO_InitStructure = {0};
-
 
     // === КРИТИЧЕСКИ ВАЖНО: Отключить отладку ===
     // Это ДОЛЖНО быть первым!
@@ -230,8 +232,6 @@ void gotoDeepSleep (void) {
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;  // ANALOG INPUT - минимум!
 
                                                    //  GPIO_Init (GPIOA, &GPIO_InitStructure);
-
-
     GPIO_Init (GPIOD, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All & ~GPIO_Pin_4;
