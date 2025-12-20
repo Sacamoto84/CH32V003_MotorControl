@@ -72,7 +72,7 @@ main-build: Standby_Mode.elf secondary-outputs
 Standby_Mode.elf: $(OBJS) $(USER_OBJS_ESCAPE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU RISC-V Cross C Linker'
-	riscv-none-embed-g++ -march=rv32ecxw -mabi=ilp32e -mtune=size -msmall-data-limit=0 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "f:/CH32V003_MotorControl/SRC/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Xlinker --print-memory-usage -Wl,-Map,"Standby_Mode.map" --specs=nano.specs --specs=nosys.specs -o "Standby_Mode.elf" $(OBJS) $(LIBS) -lprintf
+	riscv-none-embed-g++ -march=rv32ecxw -mabi=ilp32e -mtune=size -msmall-data-limit=0 -msave-restore -fmax-errors=20 -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized -g -T "f:/CH32V003_MotorControl/SRC/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"Standby_Mode.map" --specs=nano.specs --specs=nosys.specs -o "Standby_Mode.elf" $(OBJS) $(LIBS) -lprintf
 	@echo 'Finished building target: $@'
 	@
 Standby_Mode.hex: Standby_Mode.elf

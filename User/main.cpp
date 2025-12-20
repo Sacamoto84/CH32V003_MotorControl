@@ -100,7 +100,6 @@ void userEEPROM() {
     printf (".READ CONFIG Boost Power\n");
     eeprom_boostPower.init (2, 0, 100, 10, (char *)"Boost Power");
 
-
     printf (".READ CONFIG Boost Time\n");
     eeprom_boostTime.init (3, 0, 1000, 100, (char *)"Boost Time");
 }
@@ -193,22 +192,6 @@ int main (void) {
             ScreenBoostTime();
         }
 
-
-        // static bool run = false;
-
-        // if (comandMotorOn) {
-        //     comandMotorOn = false;
-        //     pwm.setFrequency (50);
-        //     pwm.setDuty (eeprom_boostPower.get());
-        //     pwm.setFrequency (5000);
-        //     pwm.enable();
-        //     delay (eeprom_boostTime.get());
-        //     pwm.setDuty (eeprom_power.get());
-        //     LED_ON;
-        // } else {
-        //     pwm.disable();
-        //     LED_OFF;
-        // }
     }
 }
 
@@ -267,4 +250,6 @@ void gotoDeepSleep (void) {
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
     GPIO_Init (GPIOD, &GPIO_InitStructure);
+
+    //GPIO_PinRemapConfig (GPIO_Remap_SDI_Disable, DISABLE);  // Включить SWD
 }

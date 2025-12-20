@@ -8,7 +8,7 @@
 /* Debug Configuration ------------------------------------------------------*/
 /* Main debug switch - enables/disables ALL logs */
 #ifndef EEPROM_DEBUG
-#define EEPROM_DEBUG 1  // 0 = disable, 1 = enable debug messages
+#define EEPROM_DEBUG 0  // 0 = disable, 1 = enable debug messages
 #endif
 
 /* Color macros */

@@ -32,27 +32,27 @@ static uint64_t boost_start_time = 0;
 // PUBLIC API - вызывается извне (обработчики кнопок, UART команды и т.д.)
 // ============================================================================
 
-void Motor_Init(void) {
-    motorPwm.init(100, 7, 50);
-    motorPwm.setDutyPercent(0);
-    motorPwm.setFrequency(50);
+void Motor_Init (void) {
+    motorPwm.init (100, 7, 50);
+    motorPwm.setDutyPercent (0);
+    motorPwm.setFrequency (50);
     motorPwm.disable();
     motor_state = STATE_IDLE;
     motor_cmd = CMD_NONE;
 }
 
 // Установить команду START (неблокирующая)
-void Motor_Start(void) {
+void Motor_Start (void) {
     motor_cmd = CMD_START;
 }
 
 // Установить команду STOP (неблокирующая)
-void Motor_Stop(void) {
+void Motor_Stop (void) {
     motor_cmd = CMD_STOP;
 }
 
 // Переключить состояние мотора (вкл/выкл)
-void Motor_Toggle(void) {
+void Motor_Toggle (void) {
     if (motor_state == STATE_IDLE) {
         motor_cmd = CMD_START;
     } else {
@@ -61,11 +61,11 @@ void Motor_Toggle(void) {
 }
 
 // Получить текущее состояние
-motor_state_t Motor_GetState(void) {
+motor_state_t Motor_GetState (void) {
     return motor_state;
 }
 
-int Motor_isStop(void){
+int Motor_isStop (void) {
     return motor_state == STATE_IDLE;
 }
 
@@ -73,64 +73,70 @@ int Motor_isStop(void){
 // TICK FUNCTION - вызывается в главном цикле
 // ============================================================================
 
-void Motor_Tick(void) {
+void Motor_Tick (void) {
     // Обработка команд в первую очередь
     if (motor_cmd != CMD_NONE) {
         motor_cmd_t cmd = motor_cmd;
         motor_cmd = CMD_NONE;  // Сбрасываем команду сразу
-        
+
         switch (cmd) {
-            case CMD_START:
-                if (motor_state == STATE_IDLE) {
-                    motorPwm.enable();
-                    
-                    if (eeprom_boostEnable.get() == 0) {
-                        // Буст выключен - сразу на рабочую мощность
-                        motorPwm.setFrequency(5000);
-                        motorPwm.setDutyPercent(eeprom_power.get());
-                        motor_state = STATE_RUNNING;
-                    } else {
-                        // Буст включен - стартуем с boost мощности
-                        motorPwm.setFrequency(50);
-                        motorPwm.setDutyPercent(eeprom_boostPower.get());
-                        boost_start_time = millisec;
-                        motor_state = STATE_BOOST;
-                    }
+        case CMD_START:
+            if (motor_state == STATE_IDLE) {
+                motorPwm.enable();
+
+                if (eeprom_boostEnable.get() == 0) {
+                    // Буст выключен - сразу на рабочую мощность
+                    motorPwm.setFrequency (1000);
+                    int p = eeprom_power.get();
+                    if (p > 100)
+                        p = 100;
+                    motorPwm.setDutyPercent (p);
+                    motor_state = STATE_RUNNING;
+                } else {
+                    // Буст включен - стартуем с boost мощности
+                    motorPwm.setFrequency (50);
+                    int pp = eeprom_power.get() + eeprom_boostPower.get();
+                    if (pp > 100)
+                        pp = 100;
+                    motorPwm.setDutyPercent (pp);
+                    boost_start_time = millisec;
+                    motor_state = STATE_BOOST;
                 }
-                break;
-                
-            case CMD_STOP:
-                // STOP работает из любого состояния
-                motorPwm.setDutyPercent(0);
-                motorPwm.disable();
-                motor_state = STATE_IDLE;
-                break;
-                
-            default:
-                break;
-        }
-    }
-    
-    // Обработка состояний
-    switch (motor_state) {
-        case STATE_IDLE:
-            // Ничего не делаем
-            break;
-            
-        case STATE_BOOST:
-            // Проверяем, истекло ли время буста
-            if ((millisec - boost_start_time) >= eeprom_boostTime.get()) {
-                // Переходим на рабочую частоту и мощность
-                motorPwm.setFrequency(5000);
-                motorPwm.setDutyPercent(eeprom_power.get());
-                motor_state = STATE_RUNNING;
             }
             break;
-            
-        case STATE_RUNNING:
-            // Мотор работает на рабочей мощности
-            // Можно добавить мониторинг или другую логику
+
+        case CMD_STOP:
+            // STOP работает из любого состояния
+            motorPwm.setDutyPercent (0);
+            motorPwm.disable();
+            motor_state = STATE_IDLE;
             break;
+
+        default:
+            break;
+        }
+    }
+
+    // Обработка состояний
+    switch (motor_state) {
+    case STATE_IDLE:
+        // Ничего не делаем
+        break;
+
+    case STATE_BOOST:
+        // Проверяем, истекло ли время буста
+        if ((millisec - boost_start_time) >= eeprom_boostTime.get()) {
+            // Переходим на рабочую частоту и мощность
+            motorPwm.setFrequency (5000);
+            motorPwm.setDutyPercent (eeprom_power.get());
+            motor_state = STATE_RUNNING;
+        }
+        break;
+
+    case STATE_RUNNING:
+        // Мотор работает на рабочей мощности
+        // Можно добавить мониторинг или другую логику
+        break;
     }
 }
 
@@ -138,8 +144,8 @@ void Motor_Tick(void) {
 // OPTIONAL: Изменение рабочей мощности на лету
 // ============================================================================
 
-void Motor_SetPower(uint8_t power_percent) {
+void Motor_SetPower (uint8_t power_percent) {
     if (motor_state == STATE_RUNNING) {
-        motorPwm.setDutyPercent(power_percent);
+        motorPwm.setDutyPercent (power_percent);
     }
 }

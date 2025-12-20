@@ -39,27 +39,28 @@ void ScreenNormal (void) {
 
     static int step = 0;
 
+    if (Motor_isStop()) {
+        LED_OFF;
+    } else {
+        LED_ON;
+    }
+
     if (b.click()) {
-        printf ("Click\r\n");
+        printf ("Click\n");
         buzzer_ios_click();
         Motor_Toggle();
     }
 
     if (b.hold()) {
-        printf ("Hold\r\n");
+        printf ("Hold\n");
         buzzer_startup();
         step = 0;
         Motor_Stop();
     }
 
-    // if (b.releaseHold()) {
-    //     printf ("ReleaseHold\n");
-    //     buzzer_shutdown();
-    // }
-
     if (b.step()) {
         step++;
-        printf ("Step %d\r\n", step);
+        printf ("Step %d\n", step);
         buzzer_ios_click();
         LED_ON;
         delay (5);
@@ -68,7 +69,7 @@ void ScreenNormal (void) {
 
 
     if (b.releaseStep()) {
-        printf ("releaseStep\r\n");
+        printf ("releaseStep\n");
 
         if (step == Screen::SET_POWER) {
             screen = Screen::SET_POWER;
@@ -92,12 +93,12 @@ void ScreenNormal (void) {
     }
 
     if (b.release()) {
-        printf ("Release\r\n");
+        printf ("Release\n");
         LED_OFF;
     }
 
     if (b.hasClicks()) {
-        printf ("Clicks: %d\r\n", b.getClicks());
+        printf ("Clicks: %d\n", b.getClicks());
         if (b.getClicks() == 5) {
             buzzer_shutdown();
             buzzer_shutdown();
@@ -111,8 +112,8 @@ void ScreenNormal (void) {
     }
 
     if (b.timeout()) {
-        printf ("Timeout\r\n");
-        buzzer_robot();
+        printf ("Timeout\n");
+        // buzzer_robot();
         if (Motor_isStop()) {
             gotoDeepSleep();
         }
@@ -192,6 +193,11 @@ void ScreenBoostEnable (void) {
     else
         LED_OFF;
 
+    if (b.click()) {
+        printf ("Click\r\n");
+        buzzer_ios_click();
+    }
+
     if (b.hasClicks()) {
         printf ("Clicks: %d\r\n", b.getClicks());
 
@@ -209,6 +215,12 @@ void ScreenBoostEnable (void) {
             buzzer_shutdown();
             b.reset();
             LED_OFF;
+        }
+        // Save
+        if (b.getClicks() == 5) {
+            beep_Save();
+            beep_Save();
+            eeprom_boostEnable.save();
         }
     }
 }

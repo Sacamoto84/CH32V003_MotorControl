@@ -7,7 +7,7 @@ void init (void) {
     NVIC_PriorityGroupConfig (NVIC_PriorityGroup_1);
     SystemCoreClockUpdate();
     Delay_Init();
-    Delay_Ms (2500);
+    Delay_Ms (5000);
 
     RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE);
     RCC_APB1PeriphClockCmd (RCC_APB1Periph_PWR, ENABLE);
