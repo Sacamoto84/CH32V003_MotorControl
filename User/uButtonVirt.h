@@ -7,7 +7,7 @@ extern uint64_t millisec;
 //#include "define.h"
 
 #ifndef UB_DEB_TIME
-#define UB_DEB_TIME 50  // дебаунс
+#define UB_DEB_TIME 10  // дебаунс
 #endif
 
 #ifndef UB_HOLD_TIME

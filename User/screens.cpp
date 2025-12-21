@@ -46,7 +46,7 @@ void ScreenNormal (void) {
     }
 
     if (b.click()) {
-        printf ("Click\n");
+        //printf ("Click\n");
         buzzer_ios_click();
         Motor_Toggle();
     }
@@ -60,7 +60,7 @@ void ScreenNormal (void) {
 
     if (b.step()) {
         step++;
-        printf ("Step %d\n", step);
+        //printf ("Step %d\n", step);
         buzzer_ios_click();
         LED_ON;
         delay (5);
@@ -69,7 +69,7 @@ void ScreenNormal (void) {
 
 
     if (b.releaseStep()) {
-        printf ("releaseStep\n");
+        //printf ("releaseStep\n");
 
         if (step == Screen::SET_POWER) {
             screen = Screen::SET_POWER;
@@ -93,12 +93,12 @@ void ScreenNormal (void) {
     }
 
     if (b.release()) {
-        printf ("Release\n");
+        //printf ("Release\n");
         LED_OFF;
     }
 
     if (b.hasClicks()) {
-        printf ("Clicks: %d\n", b.getClicks());
+        //printf ("Clicks: %d\n", b.getClicks());
         if (b.getClicks() == 5) {
             buzzer_shutdown();
             buzzer_shutdown();
@@ -112,7 +112,7 @@ void ScreenNormal (void) {
     }
 
     if (b.timeout()) {
-        printf ("Timeout\n");
+        //printf ("Timeout\n");
         // buzzer_robot();
         if (Motor_isStop()) {
             gotoDeepSleep();
