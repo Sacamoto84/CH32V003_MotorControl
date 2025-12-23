@@ -41,23 +41,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  10 .stack        00000100  20000700  20000700  00005700  2**0
                   ALLOC
- 11 .debug_info   0001501f  00000000  00000000  00005048  2**0
+ 11 .debug_info   00015037  00000000  00000000  00005048  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_abbrev 00003a5a  00000000  00000000  0001a067  2**0
+ 12 .debug_abbrev 00003a5a  00000000  00000000  0001a07f  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_loc    00004c90  00000000  00000000  0001dac1  2**0
+ 13 .debug_loc    00004c90  00000000  00000000  0001dad9  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_aranges 00000af0  00000000  00000000  00022758  2**3
+ 14 .debug_aranges 00000af0  00000000  00000000  00022770  2**3
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_ranges 00000c48  00000000  00000000  00023248  2**3
+ 15 .debug_ranges 00000c48  00000000  00000000  00023260  2**3
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_line   0000e2a9  00000000  00000000  00023e90  2**0
+ 16 .debug_line   0000e2a9  00000000  00000000  00023ea8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_str    000039b6  00000000  00000000  00032139  2**0
+ 17 .debug_str    000039b6  00000000  00000000  00032151  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .comment      00000033  00000000  00000000  00035aef  2**0
+ 18 .comment      00000033  00000000  00000000  00035b07  2**0
                   CONTENTS, READONLY
- 19 .debug_frame  000015f0  00000000  00000000  00035b24  2**2
+ 19 .debug_frame  000015f0  00000000  00000000  00035b3c  2**2
                   CONTENTS, READONLY, DEBUGGING
 SYMBOL TABLE:
 00000000 l    d  .init	00000000 .init
@@ -1741,7 +1741,7 @@ Disassembly of section .text:
      f86:	20000437          	lui	s0,0x20000
      f8a:	05040793          	addi	a5,s0,80 # 20000050 <b>
      f8e:	2bb8                	lbu	a4,18(a5)
-     f90:	4789                	li	a5,2
+     f90:	4785                	li	a5,1
      f92:	05040413          	addi	s0,s0,80
      f96:	00f71563          	bne	a4,a5,fa0 <ScreenNormal+0x30>
      f9a:	b4aff0ef          	jal	ra,2e4 <buzzer_ios_click>

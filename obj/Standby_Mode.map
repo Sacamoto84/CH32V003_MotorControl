@@ -1460,25 +1460,25 @@ END GROUP
                 0x0000000020000800                PROVIDE (_eusrstack = .)
 OUTPUT(Standby_Mode.elf elf32-littleriscv)
 
-.debug_info     0x0000000000000000    0x1501f
+.debug_info     0x0000000000000000    0x15037
  .debug_info    0x0000000000000000     0x1683 ./User/buzzer.o
  .debug_info    0x0000000000001683      0xce5 ./User/ch32v00x_it.o
  .debug_info    0x0000000000002368      0xcc4 ./User/init.o
  .debug_info    0x000000000000302c     0x26d2 ./User/main.o
  .debug_info    0x00000000000056fe     0x1b91 ./User/motor.o
- .debug_info    0x000000000000728f     0x200a ./User/screens.o
- .debug_info    0x0000000000009299      0xc59 ./User/system_ch32v00x.o
- .debug_info    0x0000000000009ef2       0x22 ./Startup/startup_ch32v00x.o
- .debug_info    0x0000000000009f14      0xc71 ./Peripheral/src/ch32v00x_exti.o
- .debug_info    0x000000000000ab85     0x14d5 ./Peripheral/src/ch32v00x_flash.o
- .debug_info    0x000000000000c05a     0x1088 ./Peripheral/src/ch32v00x_gpio.o
- .debug_info    0x000000000000d0e2      0xe31 ./Peripheral/src/ch32v00x_misc.o
- .debug_info    0x000000000000df13      0xf54 ./Peripheral/src/ch32v00x_pwr.o
- .debug_info    0x000000000000ee67     0x10e0 ./Peripheral/src/ch32v00x_rcc.o
- .debug_info    0x000000000000ff47     0x29d3 ./Peripheral/src/ch32v00x_tim.o
- .debug_info    0x000000000001291a     0x13a5 ./Peripheral/src/ch32v00x_usart.o
- .debug_info    0x0000000000013cbf     0x1017 ./Debug/debug.o
- .debug_info    0x0000000000014cd6      0x349 ./Core/core_riscv.o
+ .debug_info    0x000000000000728f     0x2022 ./User/screens.o
+ .debug_info    0x00000000000092b1      0xc59 ./User/system_ch32v00x.o
+ .debug_info    0x0000000000009f0a       0x22 ./Startup/startup_ch32v00x.o
+ .debug_info    0x0000000000009f2c      0xc71 ./Peripheral/src/ch32v00x_exti.o
+ .debug_info    0x000000000000ab9d     0x14d5 ./Peripheral/src/ch32v00x_flash.o
+ .debug_info    0x000000000000c072     0x1088 ./Peripheral/src/ch32v00x_gpio.o
+ .debug_info    0x000000000000d0fa      0xe31 ./Peripheral/src/ch32v00x_misc.o
+ .debug_info    0x000000000000df2b      0xf54 ./Peripheral/src/ch32v00x_pwr.o
+ .debug_info    0x000000000000ee7f     0x10e0 ./Peripheral/src/ch32v00x_rcc.o
+ .debug_info    0x000000000000ff5f     0x29d3 ./Peripheral/src/ch32v00x_tim.o
+ .debug_info    0x0000000000012932     0x13a5 ./Peripheral/src/ch32v00x_usart.o
+ .debug_info    0x0000000000013cd7     0x1017 ./Debug/debug.o
+ .debug_info    0x0000000000014cee      0x349 ./Core/core_riscv.o
 
 .debug_abbrev   0x0000000000000000     0x3a5a
  .debug_abbrev  0x0000000000000000      0x337 ./User/buzzer.o

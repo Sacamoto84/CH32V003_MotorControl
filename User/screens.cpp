@@ -45,7 +45,7 @@ void ScreenNormal (void) {
         LED_ON;
     }
 
-    if (b.click()) {
+    if (b.press()) {
         //printf ("Click\n");
         buzzer_ios_click();
         Motor_Toggle();
